@@ -1,1 +1,2922 @@
-# bcde-widget
+# bcde-widget <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BCDE – Pilotage des dossiers</title>
+  <style>
+    :root {
+      --rf-blue: #000091;
+      --rf-red: #e1000f;
+      --rf-white: #ffffff;
+      --bg: #f6f8fc;
+      --text: #1b1b35;
+      --muted: #666687;
+      --border: #d6d6ef;
+      --card: #ffffff;
+      --success: #18753c;
+      --warning: #b34000;
+      --danger: #ce0500;
+      --shadow: 0 10px 30px rgba(0, 0, 145, 0.08);
+      --radius: 16px;
+      --miec-bg: #f7f9ff;
+      --miec-border: #cfd7ff;
+      --scaj-bg: #fff6f6;
+      --scaj-border: #ffd1d1;
+      --top-bg: #ffe5e5;
+      --top-border: #ffb3b3;
+      --reg-bg: #f7fff8;
+      --reg-border: #ccefd2;
+      --chart-grid: #e8e8f8;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #fff 0%, #f3f4ff 100%);
+      border-right: 1px solid var(--border);
+      padding: 24px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+
+    .brand {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .rf-flag {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 14px);
+      width: 42px;
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      vertical-align: middle;
+      margin-right: 10px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .rf-flag span:nth-child(1) { background: var(--rf-blue); }
+    .rf-flag span:nth-child(2) { background: var(--rf-white); }
+    .rf-flag span:nth-child(3) { background: var(--rf-red); }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand small {
+      color: var(--muted);
+      line-height: 1.4;
+      display: block;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .nav button,
+    .year-tab,
+    .subtle-btn,
+    .primary-btn,
+    .danger-btn,
+    .filter-btn,
+    .switch-btn,
+    .tab-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s ease;
+      font-size: 0.95rem;
+    }
+
+    .nav button {
+      text-align: left;
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .nav button.active,
+    .nav button:hover,
+    .year-tab.active,
+    .year-tab:hover,
+    .switch-btn.active,
+    .tab-btn.active {
+      background: #eef0ff;
+      border-color: #b9befa;
+      color: var(--rf-blue);
+    }
+
+    .year-list {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .year-tab {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+    }
+
+    main { padding: 24px; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .primary-btn { background: var(--rf-blue); color: #fff; }
+    .primary-btn:hover { filter: brightness(1.08); }
+    .subtle-btn, .switch-btn, .tab-btn {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .danger-btn {
+      background: #fff3f3;
+      color: var(--danger);
+      border: 1px solid #ffd0cf;
+    }
+
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .stat-card h3 {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 800;
+      margin-top: 10px;
+      color: var(--rf-blue);
+    }
+    .stat-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 18px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stats-filters {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+    }
+
+    textarea { min-height: 96px; resize: vertical; }
+
+    .filter-btn {
+      background: #f2f4ff;
+      color: var(--rf-blue);
+      border: 1px solid #cbd1ff;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1800px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 13px 12px;
+      border-bottom: 1px solid #ececff;
+      text-align: left;
+      font-size: 0.95rem;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f7f7ff;
+      color: var(--rf-blue);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tr.clickable-row { cursor: pointer; }
+    tr.clickable-row:hover { background: #f8f9ff; }
+    tr.top-row { background: #fff6f6; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .status-en-cours { background: #eef4ff; color: #3558b8; }
+    .status-finalise { background: #e8f8ee; color: var(--success); }
+    .status-en-attente { background: #fff4e5; color: var(--warning); }
+    .status-contentieux { background: #fff0ef; color: var(--danger); }
+    .top-badge { background: var(--top-bg); color: var(--danger); border: 1px solid var(--top-border); }
+    .miec-badge { background: #eef2ff; color: var(--rf-blue); border: 1px solid #d7deff; }
+    .scaj-badge { background: #fff0f0; color: #a00000; border: 1px solid #ffd0d0; }
+    .reg-badge { background: #ebfff0; color: var(--success); border: 1px solid #cbe9d2; }
+    .fraude-badge { background: #fff4e5; color: var(--warning); border: 1px solid #ffd89b; }
+    .delai-ok { background: #e8f8ee; color: var(--success); }
+    .delai-soon { background: #fff4e5; color: var(--warning); }
+    .delai-over { background: #fff0ef; color: var(--danger); }
+
+    .mini-list { display: grid; gap: 10px; }
+    .mini-item {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+    .mini-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .hidden { display: none !important; }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .triple-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+
+    .detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .detail-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .meta-box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fcfcff;
+    }
+    .meta-box small {
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .timeline {
+      position: relative;
+      margin-top: 12px;
+      padding-left: 22px;
+      border-left: 3px solid #ccd2ff;
+      display: grid;
+      gap: 14px;
+    }
+
+    .timeline.scaj { border-left-color: #ffb8b8; }
+
+    .timeline-item {
+      position: relative;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -32px;
+      top: 20px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--rf-blue);
+      border: 3px solid #eef0ff;
+    }
+
+    .timeline.scaj .timeline-item::before {
+      background: var(--rf-red);
+      border-color: #fff1f1;
+    }
+
+    .timeline-date {
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      background: #f4f5ff;
+      color: var(--rf-blue);
+      border: 1px solid #d7dbff;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 26px;
+      color: var(--muted);
+    }
+
+    .scope-section {
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .scope-section.miec { background: var(--miec-bg); border: 1px solid var(--miec-border); }
+    .scope-section.scaj { background: var(--scaj-bg); border: 1px solid var(--scaj-border); }
+    .scope-section.regularisation { background: var(--reg-bg); border: 1px solid var(--reg-border); }
+
+    .scope-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .scope-header h3 { margin: 0; font-size: 1.08rem; }
+
+    .switch-group, .tab-group {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hint { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
+
+    .import-box {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px dashed #bcc3ff;
+      background: #f9faff;
+      border-radius: 14px;
+    }
+
+    .chart-card canvas {
+      width: 100%;
+      height: 280px;
+      display: block;
+      background: linear-gradient(180deg, #fff 0%, #fbfbff 100%);
+      border-radius: 12px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    @media (max-width: 1280px) {
+      .grid-stats { grid-template-columns: repeat(3, 1fr); }
+      .layout, .panel-grid, .triple-grid, .chart-grid { grid-template-columns: 1fr; }
+      .filters, .stats-filters { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .grid-stats, .form-grid, .detail-meta, .filters, .stats-filters { grid-template-columns: 1fr; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">
+          <span class="rf-flag"><span></span><span></span><span></span></span>
+          Bureau du contentieux et du droit des étrangers
+        </div>
+        <small>
+          Outil interne de pilotage, suivi opérationnel, statistiques annuelles, import/export de sécurité et tableaux d’aide à la décision.
+        </small>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-view="dashboard">Tableau de bord</button>
+        <button class="nav-btn" data-view="stats">Statistiques</button>
+        <button class="nav-btn" data-view="new-case">Nouveau dossier</button>
+        <button class="nav-btn" data-view="settings">Paramètres</button>
+        <button class="nav-btn" data-view="detail">Fiche dossier</button>
+      </nav>
+
+      <div class="card" style="margin-top:18px;">
+        <strong>Années d'activité</strong>
+        <div class="year-list" id="yearTabs"></div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <strong>Sauvegarde et reprise</strong>
+        <div class="mini-list" style="margin-top:10px;">
+          <div class="mini-item">
+            <strong>Import tableur</strong>
+            Reprise possible à partir d’un fichier CSV, Excel ou ODS.
+          </div>
+          <div class="mini-item">
+            <strong>Export CSV</strong>
+            Export de tous les dossiers pour sauvegarde en cas d’incident.
+          </div>
+          <div class="mini-item">
+            <strong>Pilotage</strong>
+            Filtres temporels par mois, trimestre, semestre et année glissante.
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <section id="dashboardView">
+        <div class="header">
+          <div>
+            <h1>Tableau de bord BCDE</h1>
+            <div class="subtitle">Suivi global des mesures, régularisations, agents, délais et signaux d’alerte.</div>
+          </div>
+          <div class="header-actions">
+            <div class="switch-group">
+              <button class="switch-btn active" id="scopeMiecBtn" onclick="setStatsScope('MIEC')">Statistiques MIEC</button>
+              <button class="switch-btn" id="scopeScajBtn" onclick="setStatsScope('SCAJ')">Statistiques SCAJ</button>
+            </div>
+            <button class="subtle-btn" onclick="exportCasesToCsv()">Exporter CSV</button>
+            <button class="primary-btn" onclick="showView('new-case')">Créer un dossier</button>
+          </div>
+        </div>
+
+        <div class="grid-stats" id="statsGrid"></div>
+
+        <div class="layout">
+          <div class="card">
+            <h2 class="section-title">Recherche et liste des dossiers</h2>
+            <div class="filters">
+              <input id="searchInput" placeholder="Rechercher par numéro étranger, nom, prénom..." />
+              <select id="statusFilter"></select>
+              <select id="titreFilter"></select>
+              <select id="agentFilter"></select>
+              <select id="periodFilter"></select>
+              <button class="filter-btn" id="resetFiltersBtn">Réinitialiser</button>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Priorité</th>
+                    <th>Numéro étranger</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Nationalité</th>
+                    <th>Nature</th>
+                    <th>Type de titre</th>
+                    <th>Agent instructeur</th>
+                    <th>Date demande</th>
+                    <th>Date réception MIEC</th>
+                    <th>Délai 4 mois</th>
+                    <th>État</th>
+                    <th>Mesure</th>
+                    <th>Régularisation</th>
+                    <th>Contentieux</th>
+                    <th>Dernière mise à jour</th>
+                  </tr>
+                </thead>
+                <tbody id="casesTableBody"></tbody>
+              </table>
+            </div>
+            <div class="footer-note">Astuce : cliquez sur une ligne pour ouvrir la fiche complète du dossier.</div>
+          </div>
+
+          <div class="panel-grid">
+            <div class="card">
+              <h2 class="section-title">Répartition par agent</h2>
+              <div id="agentsSummary" class="mini-list"></div>
+            </div>
+            <div class="card">
+              <h2 class="section-title">Alertes de suivi</h2>
+              <div id="alertsList" class="mini-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="statsView" class="hidden">
+        <div class="header">
+          <div>
+            <h1>Statistiques et pilotage de direction</h1>
+            <div class="subtitle">Vue consolidée avec filtres temporels, indicateurs par section et graphiques d’aide à la décision.</div>
+          </div>
+          <div class="header-actions">
+            <div class="tab-group">
+              <button class="tab-btn active" id="globalStatsTab" onclick="setStatsTab('global')">Vue globale</button>
+              <button class="tab-btn" id="miecStatsTab" onclick="setStatsTab('miec')">Section MIEC</button>
+              <button class="tab-btn" id="scajStatsTab" onclick="setStatsTab('scaj')">Section SCAJ</button>
+            </div>
+            <button class="subtle-btn" onclick="exportStatsSnapshot()">Exporter synthèse CSV</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">Filtres statistiques</h2>
+          <div class="stats-filters">
+            <select id="statsPeriodType"></select>
+            <select id="statsMonthFilter"></select>
+            <select id="statsQuarterFilter"></select>
+            <select id="statsSemesterFilter"></select>
+            <select id="statsAgentFilter"></select>
+            <select id="statsTitreFilter"></select>
+          </div>
+          <div class="hint">Fonctionnalités ajoutées : filtres par mois, trimestre, semestre, agent, type de titre, période annuelle ou tous dossiers de l’année.</div>
+        </div>
+
+        <div class="grid-stats" id="statsSummaryGrid"></div>
+
+        <div class="chart-grid">
+          <div class="card chart-card">
+            <h2 class="section-title" id="chart1Title">Volume de dossiers</h2>
+            <canvas id="chart1" width="800" height="320"></canvas>
+            <div class="legend" id="chart1Legend"></div>
+          </div>
+          <div class="card chart-card">
+            <h2 class="section-title" id="chart2Title">Répartition des issues</h2>
+            <canvas id="chart2" width="800" height="320"></canvas>
+            <div class="legend" id="chart2Legend"></div>
+          </div>
+          <div class="card chart-card">
+            <h2 class="section-title" id="chart3Title">Charge par agent</h2>
+            <canvas id="chart3" width="800" height="320"></canvas>
+            <div class="legend" id="chart3Legend"></div>
+          </div>
+          <div class="card chart-card">
+            <h2 class="section-title" id="chart4Title">Délais et tensions</h2>
+            <canvas id="chart4" width="800" height="320"></canvas>
+            <div class="legend" id="chart4Legend"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="newCaseView" class="hidden">
+        <div class="header">
+          <div>
+            <h1>Nouveau dossier</h1>
+            <div class="subtitle">Création ou mise à jour d'un dossier avec données MIEC, régularisation et contentieux.</div>
+          </div>
+          <div class="header-actions">
+            <button class="subtle-btn" onclick="resetCaseForm()">Vider le formulaire</button>
+            <button class="subtle-btn" onclick="showView('dashboard')">Retour au tableau de bord</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <form id="caseForm">
+            <input type="hidden" id="caseId" />
+
+            <div class="scope-section miec">
+              <div class="scope-header">
+                <h3>MIEC – Traitement de la demande de titre</h3>
+                <span class="badge miec-badge">Instruction administrative</span>
+              </div>
+
+              <div class="form-grid">
+                <div><label>Numéro étranger</label><input id="numeroEtranger" required placeholder="Ex. 1234567890" /></div>
+                <div><label>Année d'activité</label><select id="anneeActivite" required></select></div>
+                <div><label>Nom</label><input id="nom" required /></div>
+                <div><label>Prénom</label><input id="prenom" required /></div>
+                <div><label>Nationalité</label><input id="nationalite" required /></div>
+                <div><label>Date de naissance</label><input id="dateNaissance" type="date" /></div>
+                <div><label>Date de la demande</label><input id="dateDemande" type="date" required /></div>
+                <div><label>Date de réception par la MIEC</label><input id="dateReceptionMiec" type="date" /></div>
+                <div><label>Agent instructeur</label><select id="agentInstructeur" required></select></div>
+                <div><label>Première demande ou renouvellement ?</label><select id="natureDemande" required></select></div>
+                <div><label>Type de titre demandé</label><select id="typeTitreDemande" required></select></div>
+                <div><label>Autre type de titre</label><input id="autreTypeTitre" placeholder="À renseigner si nécessaire" /></div>
+                <div><label>État du dossier</label><select id="statutDossier" required></select></div>
+                <div><label>Mesure / décision principale</label><select id="mesurePrise"></select></div>
+                <div><label>Date de la décision</label><input id="dateDecision" type="date" /></div>
+                <div><label>Date de notification de la décision</label><input id="dateNotificationDecision" type="date" /></div>
+                <div><label>Date limite / échéance</label><input id="dateEcheance" type="date" /></div>
+                <div><label>Niveau de priorité</label><select id="priorite"></select></div>
+                <div><label>Trouble à l'ordre public (TOP)</label><select id="topFlag"></select></div>
+                <div><label>Interdiction de retour</label><select id="interdictionRetour"></select></div>
+                <div><label>Suspicion de fraude</label><select id="suspicionFraude"></select></div>
+                <div><label>Dernière étape MIEC</label><input id="derniereEtape" placeholder="Ex. mémoire produit, pièces reçues, passage signature..." /></div>
+                <div class="full">
+                  <label>Observations MIEC</label>
+                  <textarea id="observations" placeholder="Notes internes, points de vigilance, pièces manquantes..."></textarea>
+                </div>
+                <div class="full">
+                  <label>Événements complémentaires de la frise MIEC (une ligne par événement : AAAA-MM-JJ | Intitulé | Détail)</label>
+                  <textarea id="timelineInput" placeholder="2026-02-02 | Demande de pièces | Courrier envoyé à l'usager&#10;2026-03-14 | Passage signature | Projet validé"></textarea>
+                  <div class="hint">Les dates structurantes seront ajoutées automatiquement à la frise.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="scope-section regularisation">
+              <div class="scope-header">
+                <h3>Régularisation</h3>
+                <span class="badge reg-badge">Volet spécifique</span>
+              </div>
+              <div class="form-grid">
+                <div><label>Régularisation</label><select id="regularisation"></select></div>
+                <div><label>Date de la régularisation</label><input id="dateRegularisation" type="date" /></div>
+                <div><label>Abrogation / retrait déjà pris</label><select id="abrogationRetrait"></select></div>
+                <div><label>Date d'abrogation / retrait</label><input id="dateAbrogationRetrait" type="date" /></div>
+                <div class="full"><label>Observations régularisation</label><textarea id="observationsRegularisation" placeholder="Motif, état d'avancement, suites données..."></textarea></div>
+              </div>
+            </div>
+
+            <div class="scope-section scaj">
+              <div class="scope-header">
+                <h3>SCAJ – Volet contentieux</h3>
+                <span class="badge scaj-badge">Suivi des recours</span>
+              </div>
+              <div class="form-grid">
+                <div><label>Contentieux</label><select id="contentieux"></select></div>
+                <div><label>Type de recours</label><select id="typeRecours"></select></div>
+                <div><label>Numéro de recours</label><input id="numeroRecours" placeholder="Ex. TA-2026-000145" /></div>
+                <div><label>Nom de l'avocat</label><input id="nomAvocat" placeholder="Nom de l'avocat / cabinet" /></div>
+                <div><label>Date de la requête</label><input id="dateRequete" type="date" /></div>
+                <div><label>Date de clôture d'instruction</label><input id="dateClotureInstruction" type="date" /></div>
+                <div><label>Date d'audience</label><input id="dateAudience" type="date" /></div>
+                <div><label>Issue du recours</label><select id="issueRecours"></select></div>
+                <div><label>Date de jugement</label><input id="dateJugement" type="date" /></div>
+                <div><label>Annulation prononcée</label><select id="annulationPrononcee"></select></div>
+                <div class="full"><label>Observations SCAJ</label><textarea id="observationsScaj" placeholder="État du recours, arguments développés, échéances procédurales..."></textarea></div>
+                <div class="full"><label>Frise chronologique SCAJ (une ligne par événement sous la forme AAAA-MM-JJ | Intitulé | Détail)</label><textarea id="timelineScajInput" placeholder="2026-03-01 | Requête enregistrée | Références du recours saisies&#10;2026-03-28 | Clôture d'instruction | Production du mémoire en défense"></textarea></div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+              <button type="submit" class="primary-btn">Enregistrer le dossier</button>
+              <button type="button" class="subtle-btn" onclick="duplicateCurrentCase()">Dupliquer depuis la fiche en cours</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="settingsView" class="hidden">
+        <div class="header">
+          <div>
+            <h1>Paramètres</h1>
+            <div class="subtitle">Gestion des agents instructeurs, types de titres et import/export tableur.</div>
+          </div>
+        </div>
+
+        <div class="triple-grid">
+          <div class="card">
+            <h2 class="section-title">Agents instructeurs</h2>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+              <input id="newAgentInput" placeholder="Nom de l'agent instructeur" />
+              <button class="primary-btn" onclick="addAgent()">Ajouter</button>
+            </div>
+            <div id="agentsList" class="mini-list"></div>
+          </div>
+
+          <div class="card">
+            <h2 class="section-title">Types de titres</h2>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+              <input id="newTitreInput" placeholder="Nouveau type de titre" />
+              <button class="primary-btn" onclick="addTitre()">Ajouter</button>
+            </div>
+            <div id="titresList" class="mini-list"></div>
+          </div>
+
+          <div class="card">
+            <h2 class="section-title">Import / Export tableur</h2>
+            <div class="import-box">
+              <input
+                id="spreadsheetImportInput"
+                type="file"
+                accept=".csv,.xlsx,.xls,.ods,.fods,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet"
+              />
+              <button class="primary-btn" onclick="handleSpreadsheetImport()">Importer un tableur</button>
+              <button class="subtle-btn" onclick="exportCasesToCsv()">Exporter les dossiers en CSV</button>
+              <div class="hint">
+                Formats acceptés : CSV, XLSX, XLS, ODS, FODS. Une ligne du tableau = un dossier.
+              </div>
+              <div class="hint">
+                Améliorations : plusieurs feuilles prises en charge, détection automatique de la meilleure feuille,
+                reconnaissance souple des colonnes, ajout automatique des nouveaux agents et types de titre.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="detailView" class="hidden">
+        <div class="header">
+          <div>
+            <h1>Fiche dossier</h1>
+            <div class="subtitle">Consultation détaillée, suivi des étapes et aide au pilotage opérationnel.</div>
+          </div>
+          <div class="header-actions">
+            <button class="subtle-btn" onclick="editSelectedCase()">Modifier</button>
+            <button class="danger-btn" onclick="deleteSelectedCase()">Supprimer</button>
+            <button class="subtle-btn" onclick="showView('dashboard')">Retour</button>
+          </div>
+        </div>
+        <div id="detailContainer" class="card">
+          <div class="empty-state">Sélectionnez un dossier depuis le tableau pour afficher sa fiche détaillée.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+
+  <script>
+    /*
+     * ============================================================
+     *  BCDE – Custom Widget Grist
+     *  Adaptation : localStorage → Grist API (grist-plugin-api)
+     *
+     *  Tables Grist attendues :
+     *    • Dossiers  – une colonne par champ du schéma
+     *    • Agents    – colonnes : nom
+     *    • TypesTitres – colonnes : libelle
+     *
+     *  Pour créer les tables : dans Grist, ajouter des tables vides
+     *  avec ces noms, puis ajouter les colonnes manuellement ou via
+     *  un premier import CSV depuis l'onglet Paramètres.
+     * ============================================================
+     */
+
+    /* ----------------------------------------------------------
+       COUCHE GRIST – remplace localStorage
+       ---------------------------------------------------------- */
+
+    let _gristReady = false;
+    let _pendingSave = null;
+
+    // Noms des tables dans Grist (à ajuster si différents)
+    const GRIST_TABLES = {
+      cases:  'Dossiers',
+      agents: 'Agents',
+      titres: 'TypesTitres'
+    };
+
+    // Colonnes Grist → champs internes
+    // Grist remplace les espaces par _ dans les noms de colonnes
+    const COL_CASE_FIELDS = [
+      'id','numeroEtranger','anneeActivite','nom','prenom','nationalite',
+      'dateNaissance','dateDemande','dateReceptionMiec','agentInstructeur',
+      'natureDemande','typeTitreDemande','autreTypeTitre','statutDossier',
+      'mesurePrise','dateDecision','dateNotificationDecision','dateEcheance',
+      'priorite','topFlag','interdictionRetour','suspicionFraude',
+      'regularisation','dateRegularisation','abrogationRetrait',
+      'dateAbrogationRetrait','observationsRegularisation','contentieux',
+      'typeRecours','numeroRecours','nomAvocat','dateRequete',
+      'dateClotureInstruction','dateAudience','issueRecours','dateJugement',
+      'annulationPrononcee','derniereEtape','observations','observationsScaj',
+      'timeline','timelineScaj','updatedAt'
+    ];
+
+    async function gristFetchCases() {
+      try {
+        const table = await grist.docApi.fetchTable(GRIST_TABLES.cases);
+        const rowIds = table.id;
+        if (!rowIds || !rowIds.length) return [];
+
+        return rowIds.map((rowId, i) => {
+          const obj = { _rowId: rowId };
+          COL_CASE_FIELDS.forEach(field => {
+            const raw = table[field] ? table[field][i] : undefined;
+            if (field === 'timeline' || field === 'timelineScaj') {
+              obj[field] = parseMaybeJsonTimeline(raw);
+            } else if (field === 'anneeActivite') {
+              obj[field] = Number(raw || state.selectedYear);
+            } else {
+              obj[field] = raw != null ? String(raw) : '';
+            }
+          });
+          return obj;
+        }).filter(c => c.numeroEtranger || c.nom || c.prenom);
+      } catch (e) {
+        console.warn('gristFetchCases error:', e);
+        return [];
+      }
+    }
+
+    async function gristFetchAgents() {
+      try {
+        const table = await grist.docApi.fetchTable(GRIST_TABLES.agents);
+        return (table.nom || []).map(v => String(v)).filter(Boolean);
+      } catch (e) {
+        console.warn('gristFetchAgents error (table "Agents" manquante ?):', e);
+        return [...defaultAgents];
+      }
+    }
+
+    async function gristFetchTitres() {
+      try {
+        const table = await grist.docApi.fetchTable(GRIST_TABLES.titres);
+        return (table.libelle || []).map(v => String(v)).filter(Boolean);
+      } catch (e) {
+        console.warn('gristFetchTitres error (table "TypesTitres" manquante ?):', e);
+        return [...defaultTitres];
+      }
+    }
+
+    async function gristUpsertCase(caseObj) {
+      const fields = {};
+      COL_CASE_FIELDS.forEach(field => {
+        const val = caseObj[field];
+        if (field === 'timeline' || field === 'timelineScaj') {
+          fields[field] = JSON.stringify(Array.isArray(val) ? val : []);
+        } else if (field === 'anneeActivite') {
+          fields[field] = Number(val || 0);
+        } else {
+          fields[field] = val != null ? String(val) : '';
+        }
+      });
+
+      try {
+        if (caseObj._rowId) {
+          await grist.docApi.applyUserActions([
+            ['UpdateRecord', GRIST_TABLES.cases, caseObj._rowId, fields]
+          ]);
+        } else {
+          await grist.docApi.applyUserActions([
+            ['AddRecord', GRIST_TABLES.cases, null, fields]
+          ]);
+        }
+      } catch (e) {
+        console.error('gristUpsertCase error:', e);
+        throw e;
+      }
+    }
+
+    async function gristDeleteCase(rowId) {
+      try {
+        await grist.docApi.applyUserActions([
+          ['RemoveRecord', GRIST_TABLES.cases, rowId]
+        ]);
+      } catch (e) {
+        console.error('gristDeleteCase error:', e);
+        throw e;
+      }
+    }
+
+    async function gristAddAgent(nom) {
+      try {
+        await grist.docApi.applyUserActions([
+          ['AddRecord', GRIST_TABLES.agents, null, { nom }]
+        ]);
+      } catch (e) {
+        console.error('gristAddAgent error:', e);
+      }
+    }
+
+    async function gristDeleteAgent(nom) {
+      try {
+        const table = await grist.docApi.fetchTable(GRIST_TABLES.agents);
+        const idx = (table.nom || []).findIndex(v => v === nom);
+        if (idx >= 0) {
+          await grist.docApi.applyUserActions([
+            ['RemoveRecord', GRIST_TABLES.agents, table.id[idx]]
+          ]);
+        }
+      } catch (e) {
+        console.error('gristDeleteAgent error:', e);
+      }
+    }
+
+    async function gristAddTitre(libelle) {
+      try {
+        await grist.docApi.applyUserActions([
+          ['AddRecord', GRIST_TABLES.titres, null, { libelle }]
+        ]);
+      } catch (e) {
+        console.error('gristAddTitre error:', e);
+      }
+    }
+
+    async function gristDeleteTitre(libelle) {
+      try {
+        const table = await grist.docApi.fetchTable(GRIST_TABLES.titres);
+        const idx = (table.libelle || []).findIndex(v => v === libelle);
+        if (idx >= 0) {
+          await grist.docApi.applyUserActions([
+            ['RemoveRecord', GRIST_TABLES.titres, table.id[idx]]
+          ]);
+        }
+      } catch (e) {
+        console.error('gristDeleteTitre error:', e);
+      }
+    }
+
+    // Sauvegarde de l'année sélectionnée (widget options)
+    async function gristSaveSelectedYear(year) {
+      try {
+        await grist.setOption('selectedYear', year);
+      } catch (e) { /* silencieux si non supporté */ }
+    }
+
+    async function gristLoadSelectedYear() {
+      try {
+        const opts = await grist.getOptions();
+        return opts && opts.selectedYear ? Number(opts.selectedYear) : 2026;
+      } catch (e) { return 2026; }
+    }
+
+    /* Indicateur de chargement */
+    function showLoader(msg) {
+      let el = document.getElementById('gristLoader');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'gristLoader';
+        el.style.cssText = `
+          position:fixed; top:0; left:0; right:0; bottom:0;
+          background:rgba(255,255,255,0.85); z-index:9999;
+          display:flex; align-items:center; justify-content:center;
+          font-size:1.1rem; font-weight:700; color:#000091;
+          flex-direction:column; gap:12px;
+        `;
+        document.body.appendChild(el);
+      }
+      el.innerHTML = `
+        <div style="width:40px;height:40px;border:4px solid #e0e0ff;border-top-color:#000091;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+        <div>${msg || 'Chargement…'}</div>
+      `;
+      el.style.display = 'flex';
+      if (!document.getElementById('spinStyle')) {
+        const s = document.createElement('style');
+        s.id = 'spinStyle';
+        s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+        document.head.appendChild(s);
+      }
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('gristLoader');
+      if (el) el.style.display = 'none';
+    }
+
+    /* ----------------------------------------------------------
+       ÉTAT APPLICATIF – plus de STORAGE_KEYS localStorage
+       ---------------------------------------------------------- */
+
+    const years = [2021, 2022, 2023, 2024, 2025, 2026];
+    const defaultAgents = ['Mme Martin', 'M. Bernard', 'Mme Diallo', 'M. Lefèvre'];
+    const defaultTitres = [
+      'Vie privée et familiale', 'Étudiant', 'Salarié', 'Passeport talent',
+      'Entrepreneur / profession libérale', 'Visiteur', 'Commerçant',
+      'Travailleur temporaire', 'Saisonnier', 'Carte de résident'
+    ];
+    const natureDemandeOptions = ['Renouvellement', 'Première demande', 'Retrait de titre', 'Changement de statut'];
+    const statusOptions = ['Tous', 'En cours', 'Finalisé', 'En attente', 'Contentieux'];
+    const realStatusOptions = ['En cours', 'Finalisé', 'En attente', 'Contentieux'];
+    const mesureOptions = ['Aucune', 'Régularisation', 'Refus', 'OQTF', 'Classement', 'Convocation', 'Demande de pièces', 'Recours'];
+    const prioriteOptions = ['Normale', 'Haute', 'Urgente'];
+    const contentieuxOptions = ['Non', 'Oui - tribunal administratif', 'Oui - appel', 'Précontentieux'];
+    const yesNoOptions = ['Non', 'Oui'];
+    const typeRecoursOptions = ['Aucun', 'Recours pour excès de pouvoir', 'Référé suspension', 'Référé liberté', 'Plein contentieux', 'Appel', 'Autre'];
+    const issueRecoursOptions = ['En cours', 'Gagné par l’administration', 'Perdu par l’administration', 'Désistement', 'Irrecevabilité', 'Non-lieu'];
+    const annulationOptions = ['Non', 'Oui'];
+    const periodOptions = ['Année entière', 'Mois en cours', 'Trimestre 1', 'Trimestre 2', 'Trimestre 3', 'Trimestre 4', 'Semestre 1', 'Semestre 2'];
+    const statsPeriodTypeOptions = ['Année entière', 'Par mois', 'Par trimestre', 'Par semestre'];
+    const monthOptions = ['Tous', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+    const quarterOptions = ['Tous', 'T1', 'T2', 'T3', 'T4'];
+    const semesterOptions = ['Tous', 'S1', 'S2'];
+
+    let state = {
+      cases: [],
+      agents: [],
+      titres: [],
+      selectedYear: 2026,
+      selectedCaseId: null,
+      statsScope: 'MIEC',
+      statsTab: 'global'
+    };
+
+    async function loadState() {
+      showLoader('Chargement des données Grist…');
+      try {
+        const [cases, agents, titres, year] = await Promise.all([
+          gristFetchCases(),
+          gristFetchAgents(),
+          gristFetchTitres(),
+          gristLoadSelectedYear()
+        ]);
+        state.cases  = cases.map(normalizeCaseSchema);
+        state.agents = agents.length ? agents : [...defaultAgents];
+        state.titres = titres.length ? titres : [...defaultTitres];
+        state.selectedYear = year;
+      } catch (e) {
+        console.error('loadState error:', e);
+        state.agents = [...defaultAgents];
+        state.titres = [...defaultTitres];
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // saveState n'est plus utilisé globalement ;
+    // chaque opération appelle directement l'API Grist.
+    function saveState() { /* no-op : remplacé par appels Grist directs */ }
+
+    function normalizeCaseSchema(c) {
+      return {
+        ...c,
+        id: c.id || uid(),
+        anneeActivite: Number(c.anneeActivite || state.selectedYear || 2026),
+        natureDemande: c.natureDemande || 'Première demande',
+        typeTitreDemande: c.typeTitreDemande || '',
+        autreTypeTitre: c.autreTypeTitre || '',
+        dateReceptionMiec: c.dateReceptionMiec || '',
+        dateDecision: c.dateDecision || '',
+        dateNotificationDecision: c.dateNotificationDecision || '',
+        topFlag: c.topFlag || 'Non',
+        interdictionRetour: c.interdictionRetour || 'Non',
+        suspicionFraude: c.suspicionFraude || 'Non',
+        regularisation: c.regularisation || 'Non',
+        dateRegularisation: c.dateRegularisation || '',
+        abrogationRetrait: c.abrogationRetrait || 'Non',
+        dateAbrogationRetrait: c.dateAbrogationRetrait || '',
+        observationsRegularisation: c.observationsRegularisation || '',
+        contentieux: c.contentieux || 'Non',
+        typeRecours: c.typeRecours || 'Aucun',
+        numeroRecours: c.numeroRecours || '',
+        nomAvocat: c.nomAvocat || '',
+        dateRequete: c.dateRequete || '',
+        dateClotureInstruction: c.dateClotureInstruction || '',
+        dateAudience: c.dateAudience || '',
+        issueRecours: c.issueRecours || 'En cours',
+        dateJugement: c.dateJugement || '',
+        annulationPrononcee: c.annulationPrononcee || 'Non',
+        observationsScaj: c.observationsScaj || '',
+        timeline: Array.isArray(c.timeline) ? c.timeline : [],
+        timelineScaj: Array.isArray(c.timelineScaj) ? c.timelineScaj : [],
+        updatedAt: c.updatedAt || new Date().toISOString().slice(0, 10)
+      };
+    }
+
+    function saveState() { /* no-op – remplacé par appels Grist directs */ }
+
+    function uid() {
+      return 'id_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('fr-FR');
+    }
+
+    function normalize(str) {
+      return (str || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function parseTimeline(text) {
+      return (text || '')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+          const [date = '', title = '', detail = ''] = line.split('|').map(v => v.trim());
+          return { date, title, detail };
+        })
+        .filter(item => item.date || item.title || item.detail)
+        .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    }
+
+    function timelineToText(timeline) {
+      return (timeline || [])
+        .map(item => [item.date || '', item.title || '', item.detail || ''].join(' | '))
+        .join('\n');
+    }
+
+    function buildAutoTimelineMiec(c) {
+      const events = [];
+      if (c.dateDemande) {
+        events.push({
+          date: c.dateDemande,
+          title: 'Dépôt de la demande',
+          detail: `${c.natureDemande || 'Demande'} – ${getDisplayTitre(c)}`
+        });
+      }
+      if (c.dateReceptionMiec) {
+        events.push({
+          date: c.dateReceptionMiec,
+          title: 'Réception de la demande par la MIEC',
+          detail: 'Demande réceptionnée par le service instructeur.'
+        });
+      }
+      if (c.dateDecision) {
+        events.push({
+          date: c.dateDecision,
+          title: 'Décision prise',
+          detail: c.mesurePrise && c.mesurePrise !== 'Aucune'
+            ? `Décision principale : ${c.mesurePrise}`
+            : 'Décision renseignée dans le dossier.'
+        });
+      }
+      if (c.dateNotificationDecision) {
+        events.push({
+          date: c.dateNotificationDecision,
+          title: 'Notification de la décision',
+          detail: 'Décision notifiée à l’intéressé.'
+        });
+      }
+      if (c.regularisation === 'Oui' && c.dateRegularisation) {
+        events.push({
+          date: c.dateRegularisation,
+          title: 'Régularisation',
+          detail: 'Régularisation renseignée dans le dossier.'
+        });
+      }
+      if (c.abrogationRetrait === 'Oui' && c.dateAbrogationRetrait) {
+        events.push({
+          date: c.dateAbrogationRetrait,
+          title: 'Abrogation / retrait',
+          detail: 'Mesure d’abrogation ou de retrait enregistrée.'
+        });
+      }
+      return events;
+    }
+
+    function mergeAndSortTimeline(autoTimeline, manualTimeline) {
+      const merged = [...autoTimeline, ...(manualTimeline || [])]
+        .filter(item => item && (item.date || item.title || item.detail))
+        .sort((a, b) =>
+          (a.date || '').localeCompare(b.date || '') ||
+          (a.title || '').localeCompare(b.title || '')
+        );
+
+      const seen = new Set();
+      return merged.filter(item => {
+        const key = `${item.date}|${item.title}|${item.detail}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function getFullTimelineMiec(c) {
+      return mergeAndSortTimeline(buildAutoTimelineMiec(c), c.timeline || []);
+    }
+
+    function getDisplayTitre(c) {
+      return c.typeTitreDemande === 'Autre'
+        ? (c.autreTypeTitre || 'Autre')
+        : (c.typeTitreDemande || '—');
+    }
+
+    function getCasesForYear() {
+      return state.cases.filter(c => Number(c.anneeActivite) === Number(state.selectedYear));
+    }
+
+    function addMonths(date, months) {
+      const d = new Date(date);
+      if (Number.isNaN(d.getTime())) return null;
+      d.setMonth(d.getMonth() + months);
+      return d;
+    }
+
+    function getFourMonthStatus(dateDemande) {
+      if (!dateDemande) return { label: '—', cls: 'delai-ok', overdue: false, daysLeft: null };
+      const today = new Date();
+      const deadline = addMonths(dateDemande, 4);
+      if (!deadline) return { label: '—', cls: 'delai-ok', overdue: false, daysLeft: null };
+      const diffDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) return { label: 'Dépassé', cls: 'delai-over', overdue: true, daysLeft: diffDays };
+      if (diffDays <= 30) return { label: 'En cours – proche', cls: 'delai-soon', overdue: false, daysLeft: diffDays };
+      return { label: 'En cours', cls: 'delai-ok', overdue: false, daysLeft: diffDays };
+    }
+
+    function priorityWeight(c) {
+      const priorityMap = { 'Urgente': 3, 'Haute': 2, 'Normale': 1 };
+      return priorityMap[c.priorite] || 0;
+    }
+
+    function getNextDateWeight(c) {
+      const candidates = [
+        c.dateEcheance,
+        c.dateDecision,
+        c.dateNotificationDecision,
+        c.dateClotureInstruction,
+        c.dateAudience
+      ].filter(Boolean).sort();
+      return candidates[0] || '9999-12-31';
+    }
+
+    function getPeriodMatch(dateStr, periodLabel) {
+      if (!dateStr) return periodLabel === 'Année entière';
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return false;
+      const m = d.getMonth() + 1;
+
+      if (periodLabel === 'Année entière') return true;
+      if (periodLabel === 'Mois en cours') return m === (new Date().getMonth() + 1);
+      if (periodLabel === 'Trimestre 1') return m >= 1 && m <= 3;
+      if (periodLabel === 'Trimestre 2') return m >= 4 && m <= 6;
+      if (periodLabel === 'Trimestre 3') return m >= 7 && m <= 9;
+      if (periodLabel === 'Trimestre 4') return m >= 10 && m <= 12;
+      if (periodLabel === 'Semestre 1') return m >= 1 && m <= 6;
+      if (periodLabel === 'Semestre 2') return m >= 7 && m <= 12;
+
+      return true;
+    }
+
+    function getFilteredCases() {
+      const search = normalize(document.getElementById('searchInput')?.value || '');
+      const status = document.getElementById('statusFilter')?.value || 'Tous';
+      const titre = document.getElementById('titreFilter')?.value || 'Tous';
+      const agent = document.getElementById('agentFilter')?.value || 'Tous';
+      const period = document.getElementById('periodFilter')?.value || 'Année entière';
+
+      return getCasesForYear()
+        .filter(c => {
+          const haystack = normalize([
+            c.numeroEtranger, c.nom, c.prenom, c.nationalite, c.natureDemande,
+            c.typeTitreDemande, c.autreTypeTitre, c.agentInstructeur, c.observations,
+            c.observationsScaj, c.observationsRegularisation, c.numeroRecours, c.nomAvocat
+          ].join(' '));
+
+          const okSearch = !search || haystack.includes(search);
+          const okStatus = status === 'Tous' || c.statutDossier === status;
+          const okTitre = titre === 'Tous' || getDisplayTitre(c) === titre || (titre === 'Autre' && c.typeTitreDemande === 'Autre');
+          const okAgent = agent === 'Tous' || c.agentInstructeur === agent;
+          const okPeriod = getPeriodMatch(c.dateDemande, period);
+
+          return okSearch && okStatus && okTitre && okAgent && okPeriod;
+        })
+        .sort((a, b) => {
+          if ((a.topFlag === 'Oui') !== (b.topFlag === 'Oui')) return a.topFlag === 'Oui' ? -1 : 1;
+          const aFour = getFourMonthStatus(a.dateDemande).overdue ? 1 : 0;
+          const bFour = getFourMonthStatus(b.dateDemande).overdue ? 1 : 0;
+          if (aFour !== bFour) return bFour - aFour;
+          const da = getNextDateWeight(a);
+          const db = getNextDateWeight(b);
+          if (da !== db) return da.localeCompare(db);
+          const pa = priorityWeight(a);
+          const pb = priorityWeight(b);
+          if (pa !== pb) return pb - pa;
+          return (b.dateDemande || '').localeCompare(a.dateDemande || '');
+        });
+    }
+
+    function getStatsFilteredCases() {
+      const periodType = document.getElementById('statsPeriodType')?.value || 'Année entière';
+      const monthFilter = document.getElementById('statsMonthFilter')?.value || 'Tous';
+      const quarterFilter = document.getElementById('statsQuarterFilter')?.value || 'Tous';
+      const semesterFilter = document.getElementById('statsSemesterFilter')?.value || 'Tous';
+      const agentFilter = document.getElementById('statsAgentFilter')?.value || 'Tous';
+      const titreFilter = document.getElementById('statsTitreFilter')?.value || 'Tous';
+
+      return getCasesForYear().filter(c => {
+        const d = c.dateDemande ? new Date(c.dateDemande) : null;
+        const month = d && !Number.isNaN(d.getTime()) ? d.getMonth() + 1 : null;
+        let okPeriod = true;
+
+        if (periodType === 'Par mois' && monthFilter !== 'Tous') okPeriod = month === monthOptions.indexOf(monthFilter);
+        if (periodType === 'Par trimestre' && quarterFilter !== 'Tous') {
+          const quarter = month ? Math.ceil(month / 3) : null;
+          okPeriod = quarter === Number(quarterFilter.replace('T', ''));
+        }
+        if (periodType === 'Par semestre' && semesterFilter !== 'Tous') {
+          const semester = month ? (month <= 6 ? 1 : 2) : null;
+          okPeriod = semester === Number(semesterFilter.replace('S', ''));
+        }
+
+        const okAgent = agentFilter === 'Tous' || c.agentInstructeur === agentFilter;
+        const okTitre = titreFilter === 'Tous' || getDisplayTitre(c) === titreFilter;
+
+        return okPeriod && okAgent && okTitre;
+      });
+    }
+
+    function renderYearTabs() {
+      const container = document.getElementById('yearTabs');
+      container.innerHTML = years
+        .map(year => `<button class="year-tab ${year === state.selectedYear ? 'active' : ''}" onclick="selectYear(${year})">${year}</button>`)
+        .join('');
+    }
+
+    function selectYear(year) {
+      state.selectedYear = year;
+      gristSaveSelectedYear(year);
+      renderAll();
+    }
+
+    function showView(view) {
+      const mapping = {
+        'dashboard': 'dashboardView',
+        'stats': 'statsView',
+        'new-case': 'newCaseView',
+        'settings': 'settingsView',
+        'detail': 'detailView'
+      };
+
+      Object.values(mapping).forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById(mapping[view]).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      });
+
+      if (view === 'stats') renderStatisticsView();
+    }
+
+    function setStatsScope(scope) {
+      state.statsScope = scope;
+      document.getElementById('scopeMiecBtn').classList.toggle('active', scope === 'MIEC');
+      document.getElementById('scopeScajBtn').classList.toggle('active', scope === 'SCAJ');
+      renderStats();
+    }
+
+    function setStatsTab(tab) {
+      state.statsTab = tab;
+      document.getElementById('globalStatsTab').classList.toggle('active', tab === 'global');
+      document.getElementById('miecStatsTab').classList.toggle('active', tab === 'miec');
+      document.getElementById('scajStatsTab').classList.toggle('active', tab === 'scaj');
+      renderStatisticsView();
+    }
+
+    function populateSelect(id, options) {
+      const select = document.getElementById(id);
+      if (!select) return;
+      const current = select.value;
+      select.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+      if (options.includes(current)) select.value = current;
+    }
+
+    function renderStats() {
+      const list = getFilteredCases();
+      let stats = [];
+
+      if (state.statsScope === 'MIEC') {
+        const total = list.length;
+        const regularisations = list.filter(c => c.regularisation === 'Oui').length;
+        const mesures = list.filter(c => c.mesurePrise && c.mesurePrise !== 'Aucune').length;
+        const oqtf = list.filter(c => c.mesurePrise === 'OQTF').length;
+        const topCount = list.filter(c => c.topFlag === 'Oui').length;
+        const delaiDepasse = list.filter(c => getFourMonthStatus(c.dateDemande).overdue).length;
+
+        stats = [
+          ['Dossiers visibles', total, 'Après application des filtres'],
+          ['Mesures rédigées', mesures, 'Décisions ou actes enregistrés'],
+          ['Régularisations', regularisations, 'Volet régularisation renseigné'],
+          ['OQTF', oqtf, 'Suivi des éloignements'],
+          ['TOP', topCount, 'Dossiers signalés ordre public'],
+          ['Délai 4 mois dépassé', delaiDepasse, 'Tension de stock MIEC']
+        ];
+      } else {
+        const contentieux = list.filter(c => c.contentieux && c.contentieux !== 'Non');
+        stats = [
+          ['Nombre de recours', contentieux.length, 'Contentieux renseignés'],
+          ['Recours gagnés', contentieux.filter(c => c.issueRecours === 'Gagné par l’administration').length, 'Décisions favorables à l’administration'],
+          ['Recours perdus', contentieux.filter(c => c.issueRecours === 'Perdu par l’administration').length, 'Décisions défavorables'],
+          ['Annulations', contentieux.filter(c => c.annulationPrononcee === 'Oui').length, 'Annulations juridictionnelles'],
+          ['Recours en cours', contentieux.filter(c => c.issueRecours === 'En cours').length, 'Instances non clôturées'],
+          ['Audiences renseignées', contentieux.filter(c => c.dateAudience).length, 'Suivi procédural SCAJ']
+        ];
+      }
+
+      document.getElementById('statsGrid').innerHTML = stats
+        .map(([label, value, note]) => `
+          <div class="card stat-card">
+            <h3>${label}</h3>
+            <div class="stat-value">${value}</div>
+            <div class="stat-note">${note}</div>
+          </div>
+        `).join('');
+    }
+
+    function statusBadgeClass(status) {
+      return {
+        'En cours': 'status-en-cours',
+        'Finalisé': 'status-finalise',
+        'En attente': 'status-en-attente',
+        'Contentieux': 'status-contentieux'
+      }[status] || 'status-en-cours';
+    }
+
+    function renderTable() {
+      const rows = getFilteredCases();
+      const tbody = document.getElementById('casesTableBody');
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state">Aucun dossier trouvé pour les filtres sélectionnés.</div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(c => {
+        const delai = getFourMonthStatus(c.dateDemande);
+        const priorityBadges = [];
+
+        if (c.topFlag === 'Oui') priorityBadges.push(`<span class="badge top-badge">TOP</span>`);
+        if (c.suspicionFraude === 'Oui') priorityBadges.push(`<span class="badge fraude-badge">Fraude</span>`);
+        if (c.priorite) priorityBadges.push(`<span class="badge ${c.priorite === 'Urgente' ? 'status-contentieux' : 'status-en-attente'}">${c.priorite}</span>`);
+
+        return `
+          <tr class="clickable-row ${c.topFlag === 'Oui' ? 'top-row' : ''}" onclick="openCase('${c.id}')">
+            <td>${priorityBadges.join(' ') || '—'}</td>
+            <td>${c.numeroEtranger || '—'}</td>
+            <td>${c.nom || '—'}</td>
+            <td>${c.prenom || '—'}</td>
+            <td>${c.nationalite || '—'}</td>
+            <td>${c.natureDemande || '—'}</td>
+            <td>${getDisplayTitre(c)}</td>
+            <td>${c.agentInstructeur || '—'}</td>
+            <td>${formatDate(c.dateDemande)}</td>
+            <td>${formatDate(c.dateReceptionMiec)}</td>
+            <td><span class="badge ${delai.cls}">${delai.label}</span></td>
+            <td><span class="badge ${statusBadgeClass(c.statutDossier)}">${c.statutDossier || '—'}</span></td>
+            <td>${c.mesurePrise || '—'}</td>
+            <td>${c.regularisation || 'Non'}</td>
+            <td>${c.contentieux || 'Non'}</td>
+            <td>${formatDate(c.updatedAt)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAgentSummary() {
+      const list = getFilteredCases();
+      const map = {};
+      state.agents.forEach(agent => map[agent] = 0);
+      list.forEach(c => {
+        if (!map[c.agentInstructeur]) map[c.agentInstructeur] = 0;
+        map[c.agentInstructeur] += 1;
+      });
+
+      const entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
+      document.getElementById('agentsSummary').innerHTML = entries.length
+        ? entries.map(([agent, count]) => `<div class="mini-item"><strong>${agent}</strong>${count} dossier(s) dans la vue courante</div>`).join('')
+        : `<div class="mini-item">Aucun agent renseigné.</div>`;
+    }
+
+    function renderAlerts() {
+      const today = new Date();
+      const alerts = getFilteredCases()
+        .map(c => {
+          const dueDates = [c.dateEcheance, c.dateDecision, c.dateNotificationDecision, c.dateClotureInstruction, c.dateAudience].filter(Boolean).sort();
+          const nextDate = dueDates[0];
+          if (!nextDate) return null;
+          const diffDays = Math.ceil((new Date(nextDate) - today) / (1000 * 60 * 60 * 24));
+          return { ...c, diffDays, nextDate };
+        })
+        .filter(Boolean)
+        .filter(c => c.diffDays <= 30 || c.topFlag === 'Oui' || getFourMonthStatus(c.dateDemande).overdue)
+        .sort((a, b) => {
+          if ((a.topFlag === 'Oui') !== (b.topFlag === 'Oui')) return a.topFlag === 'Oui' ? -1 : 1;
+          return a.diffDays - b.diffDays;
+        })
+        .slice(0, 8);
+
+      document.getElementById('alertsList').innerHTML = alerts.length
+        ? alerts.map(c => `
+            <div class="mini-item">
+              <strong>${c.numeroEtranger} – ${c.nom} ${c.prenom}${c.topFlag === 'Oui' ? ' · TOP' : ''}</strong>
+              Prochaine échéance : ${formatDate(c.nextDate)} · ${c.diffDays < 0 ? 'dépassée de ' + Math.abs(c.diffDays) + ' jour(s)' : 'dans ' + c.diffDays + ' jour(s)'}
+            </div>
+          `).join('')
+        : `<div class="mini-item">Aucune alerte d'échéance dans les 30 prochains jours.</div>`;
+    }
+
+    function renderSettingsLists() {
+      document.getElementById('agentsList').innerHTML = state.agents.length
+        ? state.agents.map(agent => `
+            <div class="mini-item" style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+              <strong style="margin:0;">${agent}</strong>
+              <button class="danger-btn" onclick="removeAgent('${agent.replace(/'/g, "\\'")}')">Supprimer</button>
+            </div>
+          `).join('')
+        : '<div class="mini-item">Aucun agent.</div>';
+
+      document.getElementById('titresList').innerHTML = state.titres.length
+        ? state.titres.map(titre => `
+            <div class="mini-item" style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+              <strong style="margin:0;">${titre}</strong>
+              <button class="danger-btn" onclick="removeTitre('${titre.replace(/'/g, "\\'")}')">Supprimer</button>
+            </div>
+          `).join('')
+        : '<div class="mini-item">Aucun type de titre.</div>';
+    }
+
+    function renderDetail() {
+      const container = document.getElementById('detailContainer');
+      const c = state.cases.find(item => item.id === state.selectedCaseId);
+
+      if (!c) {
+        container.innerHTML = '<div class="empty-state">Sélectionnez un dossier depuis le tableau pour afficher sa fiche détaillée.</div>';
+        return;
+      }
+
+      const timelineMiec = getFullTimelineMiec(c);
+      const timelineScaj = (c.timelineScaj || []).length ? c.timelineScaj : [];
+      const delai = getFourMonthStatus(c.dateDemande);
+      const deadline = addMonths(c.dateDemande, 4);
+      const deadlineStr = deadline ? deadline.toISOString().slice(0, 10) : '';
+
+      container.innerHTML = `
+        <div class="detail-head">
+          <div>
+            <h2 style="margin:0 0 8px;">${c.nom} ${c.prenom}</h2>
+            <div class="pill-row">
+              <span class="pill">Numéro étranger : ${c.numeroEtranger || '—'}</span>
+              <span class="pill">Année : ${c.anneeActivite || '—'}</span>
+              <span class="pill">Agent : ${c.agentInstructeur || '—'}</span>
+              <span class="pill">Nature : ${c.natureDemande || '—'}</span>
+              <span class="pill">Titre : ${getDisplayTitre(c)}</span>
+              ${c.topFlag === 'Oui' ? '<span class="badge top-badge">TOP – trouble à l’ordre public</span>' : ''}
+              ${c.suspicionFraude === 'Oui' ? '<span class="badge fraude-badge">Suspicion de fraude</span>' : ''}
+              ${c.regularisation === 'Oui' ? '<span class="badge reg-badge">Régularisation</span>' : ''}
+            </div>
+          </div>
+          <span class="badge ${statusBadgeClass(c.statutDossier)}">${c.statutDossier || '—'}</span>
+        </div>
+
+        <div class="scope-section miec">
+          <div class="scope-header">
+            <h3>MIEC – Traitement de la demande</h3>
+            <div class="pill-row">
+              <span class="badge miec-badge">Délai 4 mois : ${delai.label}</span>
+              <span class="badge ${delai.cls}">${formatDate(deadlineStr)}</span>
+            </div>
+          </div>
+          <div class="detail-meta">
+            <div class="meta-box"><small>Nationalité</small>${c.nationalite || '—'}</div>
+            <div class="meta-box"><small>Date de naissance</small>${formatDate(c.dateNaissance)}</div>
+            <div class="meta-box"><small>Date de la demande</small>${formatDate(c.dateDemande)}</div>
+            <div class="meta-box"><small>Date de réception MIEC</small>${formatDate(c.dateReceptionMiec)}</div>
+            <div class="meta-box"><small>Nature de la demande</small>${c.natureDemande || '—'}</div>
+            <div class="meta-box"><small>Type de titre demandé</small>${getDisplayTitre(c)}</div>
+            <div class="meta-box"><small>Mesure principale</small>${c.mesurePrise || '—'}</div>
+            <div class="meta-box"><small>Date de la décision</small>${formatDate(c.dateDecision)}</div>
+            <div class="meta-box"><small>Date de notification</small>${formatDate(c.dateNotificationDecision)}</div>
+            <div class="meta-box"><small>Priorité</small>${c.priorite || '—'}</div>
+            <div class="meta-box"><small>Échéance</small>${formatDate(c.dateEcheance)}</div>
+            <div class="meta-box"><small>Dernière étape MIEC</small>${c.derniereEtape || '—'}</div>
+            <div class="meta-box"><small>TOP</small>${c.topFlag || 'Non'}</div>
+            <div class="meta-box"><small>Interdiction de retour</small>${c.interdictionRetour || 'Non'}</div>
+            <div class="meta-box"><small>Suspicion de fraude</small>${c.suspicionFraude || 'Non'}</div>
+          </div>
+          <div class="card" style="margin-top:18px; padding:16px; box-shadow:none;">
+            <h3 class="section-title">Observations MIEC</h3>
+            <div>${(c.observations || 'Aucune observation.').replace(/\n/g, '<br>')}</div>
+          </div>
+          <div class="card" style="margin-top:18px; padding:16px; box-shadow:none;">
+            <h3 class="section-title">Frise chronologique MIEC</h3>
+            ${timelineMiec.length
+              ? `<div class="timeline">${timelineMiec.map(item => `
+                  <div class="timeline-item">
+                    <div class="timeline-date">${formatDate(item.date)}</div>
+                    <strong>${item.title || 'Étape'}</strong>
+                    <div style="margin-top:6px; color:var(--muted);">${item.detail || '—'}</div>
+                  </div>
+                `).join('')}</div>`
+              : '<div class="empty-state">Aucun événement MIEC renseigné.</div>'
+            }
+          </div>
+        </div>
+
+        <div class="scope-section regularisation">
+          <div class="scope-header">
+            <h3>Régularisation</h3>
+            <span class="badge reg-badge">${c.regularisation || 'Non'}</span>
+          </div>
+          <div class="detail-meta">
+            <div class="meta-box"><small>Régularisation</small>${c.regularisation || 'Non'}</div>
+            <div class="meta-box"><small>Date de régularisation</small>${formatDate(c.dateRegularisation)}</div>
+            <div class="meta-box"><small>Abrogation / retrait</small>${c.abrogationRetrait || 'Non'}</div>
+            <div class="meta-box"><small>Date d'abrogation / retrait</small>${formatDate(c.dateAbrogationRetrait)}</div>
+            <div class="meta-box"><small>Mise à jour</small>${formatDate(c.updatedAt)}</div>
+            <div class="meta-box"><small>Mesure principale</small>${c.mesurePrise || '—'}</div>
+          </div>
+          <div class="card" style="margin-top:18px; padding:16px; box-shadow:none;">
+            <h3 class="section-title">Observations régularisation</h3>
+            <div>${(c.observationsRegularisation || 'Aucune observation.').replace(/\n/g, '<br>')}</div>
+          </div>
+        </div>
+
+        <div class="scope-section scaj">
+          <div class="scope-header">
+            <h3>SCAJ – Contentieux</h3>
+            <span class="badge scaj-badge">${c.contentieux || 'Non'}</span>
+          </div>
+          <div class="detail-meta">
+            <div class="meta-box"><small>Type de recours</small>${c.typeRecours || '—'}</div>
+            <div class="meta-box"><small>Numéro de recours</small>${c.numeroRecours || '—'}</div>
+            <div class="meta-box"><small>Avocat</small>${c.nomAvocat || '—'}</div>
+            <div class="meta-box"><small>Date de la requête</small>${formatDate(c.dateRequete)}</div>
+            <div class="meta-box"><small>Clôture d'instruction</small>${formatDate(c.dateClotureInstruction)}</div>
+            <div class="meta-box"><small>Date d'audience</small>${formatDate(c.dateAudience)}</div>
+            <div class="meta-box"><small>Issue du recours</small>${c.issueRecours || '—'}</div>
+            <div class="meta-box"><small>Date de jugement</small>${formatDate(c.dateJugement)}</div>
+            <div class="meta-box"><small>Annulation prononcée</small>${c.annulationPrononcee || 'Non'}</div>
+          </div>
+          <div class="card" style="margin-top:18px; padding:16px; box-shadow:none;">
+            <h3 class="section-title">Observations SCAJ</h3>
+            <div>${(c.observationsScaj || 'Aucune observation contentieuse.').replace(/\n/g, '<br>')}</div>
+          </div>
+          <div class="card" style="margin-top:18px; padding:16px; box-shadow:none;">
+            <h3 class="section-title">Frise chronologique SCAJ</h3>
+            ${timelineScaj.length
+              ? `<div class="timeline scaj">${timelineScaj.map(item => `
+                  <div class="timeline-item">
+                    <div class="timeline-date">${formatDate(item.date)}</div>
+                    <strong>${item.title || 'Étape contentieuse'}</strong>
+                    <div style="margin-top:6px; color:var(--muted);">${item.detail || '—'}</div>
+                  </div>
+                `).join('')}</div>`
+              : '<div class="empty-state">Aucun élément contentieux renseigné.</div>'
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function openCase(id) {
+      state.selectedCaseId = id;
+      renderDetail();
+      showView('detail');
+    }
+
+    function getFormData() {
+      return normalizeCaseSchema({
+        id: document.getElementById('caseId').value || uid(),
+        numeroEtranger: document.getElementById('numeroEtranger').value.trim(),
+        anneeActivite: Number(document.getElementById('anneeActivite').value),
+        nom: document.getElementById('nom').value.trim(),
+        prenom: document.getElementById('prenom').value.trim(),
+        nationalite: document.getElementById('nationalite').value.trim(),
+        dateNaissance: document.getElementById('dateNaissance').value,
+        dateDemande: document.getElementById('dateDemande').value,
+        dateReceptionMiec: document.getElementById('dateReceptionMiec').value,
+        agentInstructeur: document.getElementById('agentInstructeur').value,
+        natureDemande: document.getElementById('natureDemande').value,
+        typeTitreDemande: document.getElementById('typeTitreDemande').value,
+        autreTypeTitre: document.getElementById('autreTypeTitre').value.trim(),
+        statutDossier: document.getElementById('statutDossier').value,
+        mesurePrise: document.getElementById('mesurePrise').value,
+        dateDecision: document.getElementById('dateDecision').value,
+        dateNotificationDecision: document.getElementById('dateNotificationDecision').value,
+        dateEcheance: document.getElementById('dateEcheance').value,
+        priorite: document.getElementById('priorite').value,
+        topFlag: document.getElementById('topFlag').value,
+        interdictionRetour: document.getElementById('interdictionRetour').value,
+        suspicionFraude: document.getElementById('suspicionFraude').value,
+        regularisation: document.getElementById('regularisation').value,
+        dateRegularisation: document.getElementById('dateRegularisation').value,
+        abrogationRetrait: document.getElementById('abrogationRetrait').value,
+        dateAbrogationRetrait: document.getElementById('dateAbrogationRetrait').value,
+        observationsRegularisation: document.getElementById('observationsRegularisation').value.trim(),
+        contentieux: document.getElementById('contentieux').value,
+        typeRecours: document.getElementById('typeRecours').value,
+        numeroRecours: document.getElementById('numeroRecours').value.trim(),
+        nomAvocat: document.getElementById('nomAvocat').value.trim(),
+        dateRequete: document.getElementById('dateRequete').value,
+        dateClotureInstruction: document.getElementById('dateClotureInstruction').value,
+        dateAudience: document.getElementById('dateAudience').value,
+        issueRecours: document.getElementById('issueRecours').value,
+        dateJugement: document.getElementById('dateJugement').value,
+        annulationPrononcee: document.getElementById('annulationPrononcee').value,
+        derniereEtape: document.getElementById('derniereEtape').value.trim(),
+        observations: document.getElementById('observations').value.trim(),
+        observationsScaj: document.getElementById('observationsScaj').value.trim(),
+        timeline: parseTimeline(document.getElementById('timelineInput').value),
+        timelineScaj: parseTimeline(document.getElementById('timelineScajInput').value),
+        updatedAt: new Date().toISOString().slice(0, 10)
+      });
+    }
+
+    function resetCaseForm() {
+      document.getElementById('caseForm').reset();
+      document.getElementById('caseId').value = '';
+      document.getElementById('anneeActivite').value = state.selectedYear;
+      document.getElementById('statutDossier').value = 'En cours';
+      document.getElementById('mesurePrise').value = 'Aucune';
+      document.getElementById('priorite').value = 'Normale';
+      document.getElementById('topFlag').value = 'Non';
+      document.getElementById('interdictionRetour').value = 'Non';
+      document.getElementById('suspicionFraude').value = 'Non';
+      document.getElementById('regularisation').value = 'Non';
+      document.getElementById('abrogationRetrait').value = 'Non';
+      document.getElementById('contentieux').value = 'Non';
+      document.getElementById('natureDemande').value = 'Première demande';
+      document.getElementById('typeRecours').value = 'Aucun';
+      document.getElementById('issueRecours').value = 'En cours';
+      document.getElementById('annulationPrononcee').value = 'Non';
+      document.getElementById('dateDemande').value = new Date().toISOString().slice(0, 10);
+    }
+
+    function editSelectedCase() {
+      const c = state.cases.find(item => item.id === state.selectedCaseId);
+      if (!c) return;
+
+      showView('new-case');
+      document.getElementById('caseId').value = c.id;
+      document.getElementById('numeroEtranger').value = c.numeroEtranger || '';
+      document.getElementById('anneeActivite').value = c.anneeActivite || state.selectedYear;
+      document.getElementById('nom').value = c.nom || '';
+      document.getElementById('prenom').value = c.prenom || '';
+      document.getElementById('nationalite').value = c.nationalite || '';
+      document.getElementById('dateNaissance').value = c.dateNaissance || '';
+      document.getElementById('dateDemande').value = c.dateDemande || '';
+      document.getElementById('dateReceptionMiec').value = c.dateReceptionMiec || '';
+      document.getElementById('agentInstructeur').value = c.agentInstructeur || '';
+      document.getElementById('natureDemande').value = c.natureDemande || 'Première demande';
+      document.getElementById('typeTitreDemande').value = c.typeTitreDemande || '';
+      document.getElementById('autreTypeTitre').value = c.autreTypeTitre || '';
+      document.getElementById('statutDossier').value = c.statutDossier || 'En cours';
+      document.getElementById('mesurePrise').value = c.mesurePrise || 'Aucune';
+      document.getElementById('dateDecision').value = c.dateDecision || '';
+      document.getElementById('dateNotificationDecision').value = c.dateNotificationDecision || '';
+      document.getElementById('dateEcheance').value = c.dateEcheance || '';
+      document.getElementById('priorite').value = c.priorite || 'Normale';
+      document.getElementById('topFlag').value = c.topFlag || 'Non';
+      document.getElementById('interdictionRetour').value = c.interdictionRetour || 'Non';
+      document.getElementById('suspicionFraude').value = c.suspicionFraude || 'Non';
+      document.getElementById('regularisation').value = c.regularisation || 'Non';
+      document.getElementById('dateRegularisation').value = c.dateRegularisation || '';
+      document.getElementById('abrogationRetrait').value = c.abrogationRetrait || 'Non';
+      document.getElementById('dateAbrogationRetrait').value = c.dateAbrogationRetrait || '';
+      document.getElementById('observationsRegularisation').value = c.observationsRegularisation || '';
+      document.getElementById('contentieux').value = c.contentieux || 'Non';
+      document.getElementById('typeRecours').value = c.typeRecours || 'Aucun';
+      document.getElementById('numeroRecours').value = c.numeroRecours || '';
+      document.getElementById('nomAvocat').value = c.nomAvocat || '';
+      document.getElementById('dateRequete').value = c.dateRequete || '';
+      document.getElementById('dateClotureInstruction').value = c.dateClotureInstruction || '';
+      document.getElementById('dateAudience').value = c.dateAudience || '';
+      document.getElementById('issueRecours').value = c.issueRecours || 'En cours';
+      document.getElementById('dateJugement').value = c.dateJugement || '';
+      document.getElementById('annulationPrononcee').value = c.annulationPrononcee || 'Non';
+      document.getElementById('derniereEtape').value = c.derniereEtape || '';
+      document.getElementById('observations').value = c.observations || '';
+      document.getElementById('observationsScaj').value = c.observationsScaj || '';
+      document.getElementById('timelineInput').value = timelineToText(c.timeline || []);
+      document.getElementById('timelineScajInput').value = timelineToText(c.timelineScaj || []);
+    }
+
+    function duplicateCurrentCase() {
+      const c = state.cases.find(item => item.id === state.selectedCaseId);
+      if (!c) return;
+
+      showView('new-case');
+      document.getElementById('caseId').value = '';
+      document.getElementById('numeroEtranger').value = '';
+      document.getElementById('anneeActivite').value = state.selectedYear;
+      document.getElementById('nom').value = c.nom || '';
+      document.getElementById('prenom').value = c.prenom || '';
+      document.getElementById('nationalite').value = c.nationalite || '';
+      document.getElementById('dateNaissance').value = c.dateNaissance || '';
+      document.getElementById('dateDemande').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('dateReceptionMiec').value = '';
+      document.getElementById('agentInstructeur').value = c.agentInstructeur || '';
+      document.getElementById('natureDemande').value = c.natureDemande || 'Première demande';
+      document.getElementById('typeTitreDemande').value = c.typeTitreDemande || '';
+      document.getElementById('autreTypeTitre').value = c.autreTypeTitre || '';
+      document.getElementById('statutDossier').value = 'En cours';
+      document.getElementById('mesurePrise').value = 'Aucune';
+      document.getElementById('dateDecision').value = '';
+      document.getElementById('dateNotificationDecision').value = '';
+      document.getElementById('dateEcheance').value = '';
+      document.getElementById('priorite').value = c.priorite || 'Normale';
+      document.getElementById('topFlag').value = c.topFlag || 'Non';
+      document.getElementById('interdictionRetour').value = c.interdictionRetour || 'Non';
+      document.getElementById('suspicionFraude').value = c.suspicionFraude || 'Non';
+      document.getElementById('regularisation').value = 'Non';
+      document.getElementById('dateRegularisation').value = '';
+      document.getElementById('abrogationRetrait').value = 'Non';
+      document.getElementById('dateAbrogationRetrait').value = '';
+      document.getElementById('observationsRegularisation').value = '';
+      document.getElementById('contentieux').value = 'Non';
+      document.getElementById('typeRecours').value = 'Aucun';
+      document.getElementById('numeroRecours').value = '';
+      document.getElementById('nomAvocat').value = '';
+      document.getElementById('dateRequete').value = '';
+      document.getElementById('dateClotureInstruction').value = '';
+      document.getElementById('dateAudience').value = '';
+      document.getElementById('issueRecours').value = 'En cours';
+      document.getElementById('dateJugement').value = '';
+      document.getElementById('annulationPrononcee').value = 'Non';
+      document.getElementById('derniereEtape').value = '';
+      document.getElementById('observations').value = c.observations || '';
+      document.getElementById('observationsScaj').value = '';
+      document.getElementById('timelineInput').value = '';
+      document.getElementById('timelineScajInput').value = '';
+    }
+
+    async function deleteSelectedCase() {
+      const c = state.cases.find(item => item.id === state.selectedCaseId);
+      if (!c) return;
+      const ok = confirm(`Supprimer définitivement le dossier ${c.numeroEtranger} – ${c.nom} ${c.prenom} ?`);
+      if (!ok) return;
+
+      showLoader('Suppression…');
+      try {
+        if (c._rowId) await gristDeleteCase(c._rowId);
+        state.cases = state.cases.filter(item => item.id !== state.selectedCaseId);
+        state.selectedCaseId = null;
+        renderAll();
+        showView('dashboard');
+      } catch (err) {
+        alert('Erreur lors de la suppression : ' + err.message);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    async function addAgent() {
+      const input = document.getElementById('newAgentInput');
+      const value = input.value.trim();
+      if (!value || state.agents.includes(value)) return;
+      showLoader('Ajout de l'agent…');
+      await gristAddAgent(value);
+      state.agents.push(value);
+      state.agents.sort((a, b) => a.localeCompare(b, 'fr'));
+      input.value = '';
+      hideLoader();
+      renderAll();
+    }
+
+    async function removeAgent(agent) {
+      if (state.cases.some(c => c.agentInstructeur === agent)) {
+        alert("Impossible de supprimer cet agent car il est rattaché à un ou plusieurs dossiers.");
+        return;
+      }
+      showLoader('Suppression…');
+      await gristDeleteAgent(agent);
+      state.agents = state.agents.filter(a => a !== agent);
+      hideLoader();
+      renderAll();
+    }
+
+    async function addTitre() {
+      const input = document.getElementById('newTitreInput');
+      const value = input.value.trim();
+      if (!value || state.titres.includes(value)) return;
+      showLoader('Ajout du type de titre…');
+      await gristAddTitre(value);
+      state.titres.push(value);
+      state.titres.sort((a, b) => a.localeCompare(b, 'fr'));
+      input.value = '';
+      hideLoader();
+      renderAll();
+    }
+
+    async function removeTitre(titre) {
+      if (state.cases.some(c => c.typeTitreDemande === titre)) {
+        alert("Impossible de supprimer ce type de titre car il est utilisé dans un ou plusieurs dossiers.");
+        return;
+      }
+      showLoader('Suppression…');
+      await gristDeleteTitre(titre);
+      state.titres = state.titres.filter(t => t !== titre);
+      hideLoader();
+      renderAll();
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = 'Tous';
+      document.getElementById('titreFilter').value = 'Tous';
+      document.getElementById('agentFilter').value = 'Tous';
+      document.getElementById('periodFilter').value = 'Année entière';
+      renderTable();
+      renderAgentSummary();
+      renderAlerts();
+      renderStats();
+    }
+
+    function csvEscape(value) {
+      const v = value == null ? '' : String(value);
+      return /[";,\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+    }
+
+    function exportCasesToCsv() {
+      const headers = [
+        'id','numeroEtranger','anneeActivite','nom','prenom','nationalite','dateNaissance','dateDemande','dateReceptionMiec','agentInstructeur','natureDemande','typeTitreDemande','autreTypeTitre','statutDossier','mesurePrise','dateDecision','dateNotificationDecision','dateEcheance','priorite','topFlag','interdictionRetour','suspicionFraude','regularisation','dateRegularisation','abrogationRetrait','dateAbrogationRetrait','observationsRegularisation','contentieux','typeRecours','numeroRecours','nomAvocat','dateRequete','dateClotureInstruction','dateAudience','issueRecours','dateJugement','annulationPrononcee','derniereEtape','observations','observationsScaj','timeline','timelineScaj','updatedAt'
+      ];
+
+      const rows = state.cases.map(c => headers.map(h => {
+        if (h === 'timeline' || h === 'timelineScaj') return csvEscape(JSON.stringify(c[h] || []));
+        return csvEscape(c[h] || '');
+      }).join(';'));
+
+      const csv = '\uFEFF' + headers.join(';') + '\n' + rows.join('\n');
+      downloadTextFile(csv, `bcde_dossiers_${state.selectedYear}.csv`, 'text/csv;charset=utf-8;');
+    }
+
+    function exportStatsSnapshot() {
+      const list = getStatsFilteredCases();
+      const lines = [
+        ['indicateur','valeur'],
+        ['annee', state.selectedYear],
+        ['volume_total', list.length],
+        ['miec_total', list.length],
+        ['scaj_contentieux', list.filter(c => c.contentieux !== 'Non').length],
+        ['regularisations', list.filter(c => c.regularisation === 'Oui').length],
+        ['oqtf', list.filter(c => c.mesurePrise === 'OQTF').length],
+        ['top', list.filter(c => c.topFlag === 'Oui').length],
+        ['fraude', list.filter(c => c.suspicionFraude === 'Oui').length],
+        ['delai_depasse', list.filter(c => getFourMonthStatus(c.dateDemande).overdue).length]
+      ];
+
+      const csv = '\uFEFF' + lines.map(line => line.map(csvEscape).join(';')).join('\n');
+      downloadTextFile(csv, `bcde_stats_${state.selectedYear}.csv`, 'text/csv;charset=utf-8;');
+    }
+
+    function downloadTextFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function getMonthlyCounts(list) {
+      const arr = Array.from({ length: 12 }, (_, i) => ({ label: monthOptions[i + 1], value: 0 }));
+      list.forEach(c => {
+        if (!c.dateDemande) return;
+        const d = new Date(c.dateDemande);
+        if (Number.isNaN(d.getTime())) return;
+        arr[d.getMonth()].value += 1;
+      });
+      return arr;
+    }
+
+    function countBy(list, accessor) {
+      const map = new Map();
+      list.forEach(item => {
+        const key = accessor(item) || 'Non renseigné';
+        map.set(key, (map.get(key) || 0) + 1);
+      });
+      return Array.from(map.entries())
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value);
+    }
+
+    function getStatsSummaryCards(list) {
+      const contentieux = list.filter(c => c.contentieux !== 'Non');
+      const statsBase = [
+        ['Dossiers', list.length, 'Volume après filtres'],
+        ['TOP', list.filter(c => c.topFlag === 'Oui').length, 'Signalements ordre public'],
+        ['Fraude', list.filter(c => c.suspicionFraude === 'Oui').length, 'Signalements fraude'],
+        ['Délai dépassé', list.filter(c => getFourMonthStatus(c.dateDemande).overdue).length, 'Dossiers au-delà de 4 mois'],
+        ['Régularisations', list.filter(c => c.regularisation === 'Oui').length, 'Suivi favorable'],
+        ['Contentieux', contentieux.length, 'Recours renseignés']
+      ];
+
+      if (state.statsTab === 'miec') {
+        return [
+          ['Dossiers MIEC', list.length, 'Stock analysé'],
+          ['Premières demandes', list.filter(c => c.natureDemande === 'Première demande').length, 'Flux entrants'],
+          ['Renouvellements', list.filter(c => c.natureDemande === 'Renouvellement').length, 'Flux de reconduction'],
+          ['Décisions notifiées', list.filter(c => c.dateNotificationDecision).length, 'Chaîne décisionnelle'],
+          ['OQTF', list.filter(c => c.mesurePrise === 'OQTF').length, 'Mesures d’éloignement'],
+          ['Délai dépassé', list.filter(c => getFourMonthStatus(c.dateDemande).overdue).length, 'Points de tension']
+        ];
+      }
+
+      if (state.statsTab === 'scaj') {
+        return [
+          ['Recours total', contentieux.length, 'Stock contentieux'],
+          ['En cours', contentieux.filter(c => c.issueRecours === 'En cours').length, 'Instances ouvertes'],
+          ['Gagnés', contentieux.filter(c => c.issueRecours === 'Gagné par l’administration').length, 'Résultats favorables'],
+          ['Perdus', contentieux.filter(c => c.issueRecours === 'Perdu par l’administration').length, 'Résultats défavorables'],
+          ['Annulations', contentieux.filter(c => c.annulationPrononcee === 'Oui').length, 'Impact juridictionnel'],
+          ['Audiences', contentieux.filter(c => c.dateAudience).length, 'Échéances juridictionnelles']
+        ];
+      }
+
+      return statsBase;
+    }
+
+    function renderStatisticsView() {
+      const list = getStatsFilteredCases();
+      const cards = getStatsSummaryCards(list);
+      document.getElementById('statsSummaryGrid').innerHTML = cards
+        .map(([label, value, note]) => `
+          <div class="card stat-card">
+            <h3>${label}</h3>
+            <div class="stat-value">${value}</div>
+            <div class="stat-note">${note}</div>
+          </div>
+        `).join('');
+
+      if (state.statsTab === 'miec') {
+        document.getElementById('chart1Title').textContent = 'Entrées MIEC par mois';
+        document.getElementById('chart2Title').textContent = 'Répartition des mesures MIEC';
+        document.getElementById('chart3Title').textContent = 'Charge MIEC par agent';
+        document.getElementById('chart4Title').textContent = 'Délais, TOP et fraude';
+
+        drawBarChart('chart1', getMonthlyCounts(list), '#000091');
+        setLegend('chart1Legend', [{ label: 'Dossiers enregistrés', color: '#000091' }]);
+
+        drawPieChart('chart2', countBy(list.filter(c => c.mesurePrise && c.mesurePrise !== 'Aucune'), c => c.mesurePrise).slice(0, 6));
+        setLegend(
+          'chart2Legend',
+          countBy(list.filter(c => c.mesurePrise && c.mesurePrise !== 'Aucune'), c => c.mesurePrise)
+            .slice(0, 6)
+            .map((d, i) => ({ label: `${d.label} (${d.value})`, color: palette(i) }))
+        );
+
+        drawBarChart('chart3', countBy(list, c => c.agentInstructeur), '#0063cb');
+        setLegend('chart3Legend', [{ label: 'Dossiers par agent', color: '#0063cb' }]);
+
+        drawGroupedBarChart('chart4', [
+          { label: 'Délais dépassés', value: list.filter(c => getFourMonthStatus(c.dateDemande).overdue).length, color: '#ce0500' },
+          { label: 'TOP', value: list.filter(c => c.topFlag === 'Oui').length, color: '#e1000f' },
+          { label: 'Fraude', value: list.filter(c => c.suspicionFraude === 'Oui').length, color: '#b34000' }
+        ]);
+        setLegend('chart4Legend', [
+          { label: 'Délais dépassés', color: '#ce0500' },
+          { label: 'TOP', color: '#e1000f' },
+          { label: 'Fraude', color: '#b34000' }
+        ]);
+      } else if (state.statsTab === 'scaj') {
+        const contentieux = list.filter(c => c.contentieux !== 'Non');
+
+        document.getElementById('chart1Title').textContent = 'Recours par mois';
+        document.getElementById('chart2Title').textContent = 'Issues contentieuses';
+        document.getElementById('chart3Title').textContent = 'Typologie des recours';
+        document.getElementById('chart4Title').textContent = 'Audiences, jugements, annulations';
+
+        drawBarChart('chart1', getMonthlyCounts(contentieux), '#a00000');
+        setLegend('chart1Legend', [{ label: 'Recours / dossiers contentieux', color: '#a00000' }]);
+
+        drawPieChart('chart2', countBy(contentieux, c => c.issueRecours).slice(0, 6));
+        setLegend(
+          'chart2Legend',
+          countBy(contentieux, c => c.issueRecours)
+            .slice(0, 6)
+            .map((d, i) => ({ label: `${d.label} (${d.value})`, color: palette(i) }))
+        );
+
+        drawBarChart('chart3', countBy(contentieux, c => c.typeRecours), '#6a6af4');
+        setLegend('chart3Legend', [{ label: 'Types de recours', color: '#6a6af4' }]);
+
+        drawGroupedBarChart('chart4', [
+          { label: 'Audiences', value: contentieux.filter(c => c.dateAudience).length, color: '#3558b8' },
+          { label: 'Jugements', value: contentieux.filter(c => c.dateJugement).length, color: '#18753c' },
+          { label: 'Annulations', value: contentieux.filter(c => c.annulationPrononcee === 'Oui').length, color: '#ce0500' }
+        ]);
+        setLegend('chart4Legend', [
+          { label: 'Audiences', color: '#3558b8' },
+          { label: 'Jugements', color: '#18753c' },
+          { label: 'Annulations', color: '#ce0500' }
+        ]);
+      } else {
+        document.getElementById('chart1Title').textContent = 'Volume annuel par mois';
+        document.getElementById('chart2Title').textContent = 'Répartition des statuts';
+        document.getElementById('chart3Title').textContent = 'Charge par agent';
+        document.getElementById('chart4Title').textContent = 'Indicateurs de pilotage';
+
+        drawBarChart('chart1', getMonthlyCounts(list), '#000091');
+        setLegend('chart1Legend', [{ label: 'Dossiers', color: '#000091' }]);
+
+        drawPieChart('chart2', countBy(list, c => c.statutDossier).slice(0, 6));
+        setLegend(
+          'chart2Legend',
+          countBy(list, c => c.statutDossier)
+            .slice(0, 6)
+            .map((d, i) => ({ label: `${d.label} (${d.value})`, color: palette(i) }))
+        );
+
+        drawBarChart('chart3', countBy(list, c => c.agentInstructeur), '#0063cb');
+        setLegend('chart3Legend', [{ label: 'Dossiers par agent', color: '#0063cb' }]);
+
+        drawGroupedBarChart('chart4', [
+          { label: 'Régularisations', value: list.filter(c => c.regularisation === 'Oui').length, color: '#18753c' },
+          { label: 'Contentieux', value: list.filter(c => c.contentieux !== 'Non').length, color: '#a00000' },
+          { label: 'Délais dépassés', value: list.filter(c => getFourMonthStatus(c.dateDemande).overdue).length, color: '#ce0500' }
+        ]);
+        setLegend('chart4Legend', [
+          { label: 'Régularisations', color: '#18753c' },
+          { label: 'Contentieux', color: '#a00000' },
+          { label: 'Délais dépassés', color: '#ce0500' }
+        ]);
+      }
+    }
+
+    function clearCanvas(id) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return { canvas, ctx };
+    }
+
+    function drawAxes(ctx, width, height, padding) {
+      ctx.strokeStyle = '#cfd3f5';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.stroke();
+    }
+
+    function drawBarChart(id, data, color) {
+      const { canvas, ctx } = clearCanvas(id);
+      const width = canvas.width, height = canvas.height, padding = 42;
+      drawAxes(ctx, width, height, padding);
+
+      const max = Math.max(...data.map(d => d.value), 1);
+      const barWidth = Math.max(18, (width - padding * 2) / (data.length * 1.5));
+      const gap = ((width - padding * 2) - (barWidth * data.length)) / Math.max(data.length - 1, 1);
+
+      ctx.font = '12px Arial';
+
+      data.forEach((d, i) => {
+        const x = padding + i * (barWidth + gap);
+        const barHeight = ((height - padding * 2) * d.value) / max;
+        const y = height - padding - barHeight;
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        ctx.fillStyle = '#1b1b35';
+        ctx.fillText(String(d.value), x + 4, y - 6);
+
+        ctx.save();
+        ctx.translate(x + barWidth / 2, height - padding + 14);
+        ctx.rotate(-Math.PI / 6);
+        ctx.textAlign = 'right';
+        ctx.fillText(d.label, 0, 0);
+        ctx.restore();
+      });
+    }
+
+    function drawGroupedBarChart(id, data) {
+      const { canvas, ctx } = clearCanvas(id);
+      const width = canvas.width, height = canvas.height, padding = 52;
+      drawAxes(ctx, width, height, padding);
+
+      const max = Math.max(...data.map(d => d.value), 1);
+      const totalWidth = width - padding * 2;
+      const slot = totalWidth / data.length;
+      const barWidth = Math.min(80, slot * 0.5);
+
+      ctx.font = '12px Arial';
+
+      data.forEach((d, i) => {
+        const x = padding + slot * i + (slot - barWidth) / 2;
+        const barHeight = ((height - padding * 2) * d.value) / max;
+        const y = height - padding - barHeight;
+
+        ctx.fillStyle = d.color;
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        ctx.fillStyle = '#1b1b35';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(d.value), x + barWidth / 2, y - 6);
+        ctx.fillText(d.label, x + barWidth / 2, height - padding + 18);
+      });
+
+      ctx.textAlign = 'left';
+    }
+
+    function palette(index) {
+      const colors = ['#000091', '#0063cb', '#6a6af4', '#e1000f', '#ce0500', '#18753c', '#b34000', '#3558b8'];
+      return colors[index % colors.length];
+    }
+
+    function drawPieChart(id, data) {
+      const { canvas, ctx } = clearCanvas(id);
+      const width = canvas.width, height = canvas.height;
+      const cx = width / 2, cy = height / 2, radius = 100;
+      const total = Math.max(data.reduce((sum, d) => sum + d.value, 0), 1);
+      let start = -Math.PI / 2;
+
+      data.forEach((d, i) => {
+        const slice = (d.value / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, start, start + slice);
+        ctx.closePath();
+        ctx.fillStyle = palette(i);
+        ctx.fill();
+        start += slice;
+      });
+
+      ctx.beginPath();
+      ctx.fillStyle = '#fff';
+      ctx.arc(cx, cy, 44, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#1b1b35';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(total), cx, cy + 5);
+      ctx.textAlign = 'left';
+    }
+
+    function setLegend(id, items) {
+      document.getElementById(id).innerHTML = items
+        .map(item => `<span><i class="dot" style="background:${item.color}"></i>${item.label}</span>`)
+        .join('');
+    }
+
+    function renderFormOptions() {
+      populateSelect('anneeActivite', years);
+      populateSelect('agentInstructeur', state.agents);
+      populateSelect('natureDemande', natureDemandeOptions);
+      populateSelect('typeTitreDemande', [...state.titres, 'Autre']);
+      populateSelect('statutDossier', realStatusOptions);
+      populateSelect('mesurePrise', mesureOptions);
+      populateSelect('priorite', prioriteOptions);
+      populateSelect('topFlag', yesNoOptions);
+      populateSelect('interdictionRetour', yesNoOptions);
+      populateSelect('suspicionFraude', yesNoOptions);
+      populateSelect('regularisation', yesNoOptions);
+      populateSelect('abrogationRetrait', yesNoOptions);
+      populateSelect('contentieux', contentieuxOptions);
+      populateSelect('typeRecours', typeRecoursOptions);
+      populateSelect('issueRecours', issueRecoursOptions);
+      populateSelect('annulationPrononcee', annulationOptions);
+      populateSelect('statusFilter', statusOptions);
+      populateSelect('titreFilter', ['Tous', ...state.titres, 'Autre']);
+      populateSelect('agentFilter', ['Tous', ...state.agents]);
+      populateSelect('periodFilter', periodOptions);
+      populateSelect('statsPeriodType', statsPeriodTypeOptions);
+      populateSelect('statsMonthFilter', monthOptions);
+      populateSelect('statsQuarterFilter', quarterOptions);
+      populateSelect('statsSemesterFilter', semesterOptions);
+      populateSelect('statsAgentFilter', ['Tous', ...state.agents]);
+      populateSelect('statsTitreFilter', ['Tous', ...state.titres]);
+    }
+
+    function renderAll() {
+      renderYearTabs();
+      renderFormOptions();
+      renderStats();
+      renderTable();
+      renderAgentSummary();
+      renderAlerts();
+      renderSettingsLists();
+      renderDetail();
+
+      if (document.getElementById('statsView') && !document.getElementById('statsView').classList.contains('hidden')) {
+        renderStatisticsView();
+      }
+
+      document.getElementById('anneeActivite').value = state.selectedYear;
+      document.getElementById('scopeMiecBtn').classList.toggle('active', state.statsScope === 'MIEC');
+      document.getElementById('scopeScajBtn').classList.toggle('active', state.statsScope === 'SCAJ');
+    }
+
+    /* =======================
+       IMPORT TABLEUR AMÉLIORÉ
+       ======================= */
+
+    function normalizeHeaderName(header) {
+      return normalize(String(header || ''))
+        .replace(/\s+/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function firstNonEmpty(obj, keys) {
+      for (const key of keys) {
+        if (obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') {
+          return String(obj[key]).trim();
+        }
+      }
+      return '';
+    }
+
+    function toYesNo(value, defaultValue = 'Non') {
+      const v = normalize(String(value || ''));
+      if (!v) return defaultValue;
+      if (['oui', 'yes', 'true', '1', 'o'].includes(v)) return 'Oui';
+      if (['non', 'no', 'false', '0', 'n'].includes(v)) return 'Non';
+      return defaultValue;
+    }
+
+    function toNumberYear(value) {
+      const n = Number(String(value || '').trim());
+      return Number.isFinite(n) ? n : state.selectedYear;
+    }
+
+    function normalizeDateValue(value) {
+      if (value == null || value === '') return '';
+
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString().slice(0, 10);
+      }
+
+      const raw = String(value).trim();
+      if (!raw) return '';
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+        const [dd, mm, yyyy] = raw.split('/');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) {
+        const [dd, mm, yyyy] = raw.split('-');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      const parsed = new Date(raw);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toISOString().slice(0, 10);
+      }
+
+      return raw;
+    }
+
+    function parseMaybeJsonTimeline(value) {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      const text = String(value).trim();
+      if (!text) return [];
+
+      try {
+        const parsed = JSON.parse(text);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return parseTimeline(text);
+      }
+    }
+
+    function getHeaderAliasMap() {
+      return {
+        id: ['id', 'identifiant'],
+        numeroetranger: ['numeroetranger', 'numetranger', 'numero', 'etranger', 'numerodossier', 'numdossier', 'ne'],
+        anneeactivite: ['anneeactivite', 'annee', 'exercice'],
+        nom: ['nom', 'nomdefamille'],
+        prenom: ['prenom', 'prenoms'],
+        nationalite: ['nationalite', 'nationaliteusager', 'pays'],
+        datenaissance: ['datenaissance', 'naissance', 'datedenaissance'],
+        datedemande: ['datedemande', 'demande', 'datededemande', 'datedepot', 'dateenregistrement'],
+        datereceptionmiec: ['datereceptionmiec', 'receptionmiec', 'datedereceptionmiec', 'datereception', 'reception'],
+        agentinstructeur: ['agentinstructeur', 'agent', 'instructeur', 'agentcharge'],
+        naturedemande: ['naturedemande', 'nature', 'typededemande'],
+        typetitredemande: ['typetitredemande', 'typetitre', 'titre', 'titredemande', 'categorietitre'],
+        autretypetitre: ['autretypetitre', 'autretitre'],
+        statutdossier: ['statutdossier', 'statut', 'etat', 'etatdossier'],
+        mesureprise: ['mesureprise', 'mesure', 'decisionprincipale', 'decision'],
+        datedecision: ['datedecision'],
+        datenotificationdecision: ['datenotificationdecision', 'datenotification', 'notificationdecision'],
+        dateecheance: ['dateecheance', 'echeance', 'datelimite'],
+        priorite: ['priorite', 'urgence', 'niveaupriorite'],
+        topflag: ['topflag', 'top', 'troubleordrepublic'],
+        interdictionretour: ['interdictionretour', 'irtf', 'interdiction'],
+        suspicionfraude: ['suspicionfraude', 'fraude', 'fraudeflag'],
+        regularisation: ['regularisation', 'regularise'],
+        dateregularisation: ['dateregularisation'],
+        abrogationretrait: ['abrogationretrait', 'abrogation', 'retrait'],
+        dateabrogationretrait: ['dateabrogationretrait'],
+        observationsregularisation: ['observationsregularisation', 'obsregularisation'],
+        contentieux: ['contentieux', 'recourscontentieux'],
+        typerecours: ['typerecours', 'recours', 'naturedurecours'],
+        numerorecours: ['numerorecours', 'numrecours'],
+        nomavocat: ['nomavocat', 'avocat', 'cabinet'],
+        daterequete: ['daterequete', 'requete'],
+        dateclotureinstruction: ['dateclotureinstruction', 'clotureinstruction'],
+        dateaudience: ['dateaudience', 'audience'],
+        issuerecours: ['issuerecours', 'issue', 'resultatrecours'],
+        datejugement: ['datejugement', 'jugement'],
+        annulationprononcee: ['annulationprononcee', 'annulation'],
+        derniereetape: ['derniereetape', 'etape', 'etapeactuelle'],
+        observations: ['observations', 'obsmiec', 'commentaires', 'notes'],
+        observationsscaj: ['observationsscaj', 'obsscaj'],
+        timeline: ['timeline', 'frisemiec', 'chronologiemiec'],
+        timelinescaj: ['timelinescaj', 'frisescaj', 'chronologiescaj'],
+        updatedat: ['updatedat', 'maj', 'dernieremiseajour']
+      };
+    }
+
+    function resolveFieldValue(row, canonicalField) {
+      const aliases = getHeaderAliasMap()[canonicalField] || [canonicalField];
+      return firstNonEmpty(row, aliases);
+    }
+
+    function mapRowToCase(rawRow) {
+      const row = {};
+      Object.keys(rawRow || {}).forEach(key => {
+        row[normalizeHeaderName(key)] = rawRow[key];
+      });
+
+      return normalizeCaseSchema({
+        id: resolveFieldValue(row, 'id') || uid(),
+        numeroEtranger: resolveFieldValue(row, 'numeroetranger'),
+        anneeActivite: toNumberYear(resolveFieldValue(row, 'anneeactivite')),
+        nom: resolveFieldValue(row, 'nom'),
+        prenom: resolveFieldValue(row, 'prenom'),
+        nationalite: resolveFieldValue(row, 'nationalite'),
+        dateNaissance: normalizeDateValue(resolveFieldValue(row, 'datenaissance')),
+        dateDemande: normalizeDateValue(resolveFieldValue(row, 'datedemande')),
+        dateReceptionMiec: normalizeDateValue(resolveFieldValue(row, 'datereceptionmiec')),
+        agentInstructeur: resolveFieldValue(row, 'agentinstructeur'),
+        natureDemande: resolveFieldValue(row, 'naturedemande') || 'Première demande',
+        typeTitreDemande: resolveFieldValue(row, 'typetitredemande'),
+        autreTypeTitre: resolveFieldValue(row, 'autretypetitre'),
+        statutDossier: resolveFieldValue(row, 'statutdossier') || 'En cours',
+        mesurePrise: resolveFieldValue(row, 'mesureprise') || 'Aucune',
+        dateDecision: normalizeDateValue(resolveFieldValue(row, 'datedecision')),
+        dateNotificationDecision: normalizeDateValue(resolveFieldValue(row, 'datenotificationdecision')),
+        dateEcheance: normalizeDateValue(resolveFieldValue(row, 'dateecheance')),
+        priorite: resolveFieldValue(row, 'priorite') || 'Normale',
+        topFlag: toYesNo(resolveFieldValue(row, 'topflag')),
+        interdictionRetour: toYesNo(resolveFieldValue(row, 'interdictionretour')),
+        suspicionFraude: toYesNo(resolveFieldValue(row, 'suspicionfraude')),
+        regularisation: toYesNo(resolveFieldValue(row, 'regularisation')),
+        dateRegularisation: normalizeDateValue(resolveFieldValue(row, 'dateregularisation')),
+        abrogationRetrait: toYesNo(resolveFieldValue(row, 'abrogationretrait')),
+        dateAbrogationRetrait: normalizeDateValue(resolveFieldValue(row, 'dateabrogationretrait')),
+        observationsRegularisation: resolveFieldValue(row, 'observationsregularisation'),
+        contentieux: resolveFieldValue(row, 'contentieux') || 'Non',
+        typeRecours: resolveFieldValue(row, 'typerecours') || 'Aucun',
+        numeroRecours: resolveFieldValue(row, 'numerorecours'),
+        nomAvocat: resolveFieldValue(row, 'nomavocat'),
+        dateRequete: normalizeDateValue(resolveFieldValue(row, 'daterequete')),
+        dateClotureInstruction: normalizeDateValue(resolveFieldValue(row, 'dateclotureinstruction')),
+        dateAudience: normalizeDateValue(resolveFieldValue(row, 'dateaudience')),
+        issueRecours: resolveFieldValue(row, 'issuerecours') || 'En cours',
+        dateJugement: normalizeDateValue(resolveFieldValue(row, 'datejugement')),
+        annulationPrononcee: toYesNo(resolveFieldValue(row, 'annulationprononcee')),
+        derniereEtape: resolveFieldValue(row, 'derniereetape'),
+        observations: resolveFieldValue(row, 'observations'),
+        observationsScaj: resolveFieldValue(row, 'observationsscaj'),
+        timeline: parseMaybeJsonTimeline(resolveFieldValue(row, 'timeline')),
+        timelineScaj: parseMaybeJsonTimeline(resolveFieldValue(row, 'timelinescaj')),
+        updatedAt: normalizeDateValue(resolveFieldValue(row, 'updatedat')) || new Date().toISOString().slice(0, 10)
+      });
+    }
+
+    function scoreSheetRows(rows) {
+      if (!rows.length) return 0;
+
+      let score = 0;
+
+      rows.slice(0, 20).forEach(rawRow => {
+        const row = {};
+        Object.keys(rawRow || {}).forEach(key => {
+          row[normalizeHeaderName(key)] = rawRow[key];
+        });
+
+        if (resolveFieldValue(row, 'numeroetranger')) score += 5;
+        if (resolveFieldValue(row, 'nom')) score += 3;
+        if (resolveFieldValue(row, 'prenom')) score += 3;
+        if (resolveFieldValue(row, 'datedemande')) score += 2;
+        if (resolveFieldValue(row, 'agentinstructeur')) score += 1;
+        if (resolveFieldValue(row, 'typetitredemande')) score += 1;
+      });
+
+      return score + rows.length * 0.01;
+    }
+
+    function extractImportableSheets(workbook) {
+      return workbook.SheetNames.map(name => {
+        const worksheet = workbook.Sheets[name];
+        const rows = XLSX.utils.sheet_to_json(worksheet, {
+          defval: '',
+          raw: false
+        });
+        return {
+          name,
+          rows,
+          score: scoreSheetRows(rows)
+        };
+      }).filter(sheet => sheet.rows.length > 0);
+    }
+
+    function chooseBestSheet(workbook) {
+      const sheets = extractImportableSheets(workbook);
+      if (!sheets.length) throw new Error('Aucune feuille exploitable trouvée dans le fichier.');
+
+      sheets.sort((a, b) => b.score - a.score || b.rows.length - a.rows.length);
+
+      if (sheets.length === 1) return sheets[0];
+
+      const summary = sheets
+        .slice(0, 5)
+        .map(s => `• ${s.name} (${s.rows.length} ligne(s))`)
+        .join('\n');
+
+      const useBest = confirm(
+        `Plusieurs feuilles ont été détectées.\n\nFeuille proposée : "${sheets[0].name}"\n\nAutres feuilles trouvées :\n${summary}\n\nOK = utiliser la feuille proposée\nAnnuler = importer toutes les feuilles`
+      );
+
+      if (useBest) return sheets[0];
+
+      return {
+        name: 'Toutes les feuilles',
+        rows: sheets.flatMap(s => s.rows),
+        score: sheets.reduce((sum, s) => sum + s.score, 0)
+      };
+    }
+
+    function addImportedAgentsAndTitres(imported) {
+      const newAgents = new Set();
+      const newTitres = new Set();
+
+      imported.forEach(c => {
+        if (c.agentInstructeur && !state.agents.includes(c.agentInstructeur)) {
+          newAgents.add(c.agentInstructeur);
+        }
+        const titre = getDisplayTitre(c);
+        if (titre && titre !== '—' && titre !== 'Autre' && !state.titres.includes(titre)) {
+          newTitres.add(titre);
+        }
+      });
+
+      if (newAgents.size) {
+        state.agents = [...state.agents, ...newAgents].sort((a, b) => a.localeCompare(b, 'fr'));
+      }
+
+      if (newTitres.size) {
+        state.titres = [...state.titres, ...newTitres].sort((a, b) => a.localeCompare(b, 'fr'));
+      }
+
+      return {
+        agentsAdded: newAgents.size,
+        titresAdded: newTitres.size
+      };
+    }
+
+    function mergeImportedCases(imported) {
+      const existingById = new Map(state.cases.map(c => [c.id, c]));
+      const existingByNumero = new Map(
+        state.cases
+          .filter(c => c.numeroEtranger)
+          .map(c => [String(c.numeroEtranger).trim(), c])
+      );
+
+      imported.forEach(c => {
+        if (c.id && existingById.has(c.id)) {
+          existingById.set(c.id, c);
+          return;
+        }
+
+        if (c.numeroEtranger && existingByNumero.has(String(c.numeroEtranger).trim())) {
+          const old = existingByNumero.get(String(c.numeroEtranger).trim());
+          existingById.set(old.id, { ...old, ...c, id: old.id });
+          return;
+        }
+
+        existingById.set(c.id, c);
+      });
+
+      state.cases = Array.from(existingById.values()).map(normalizeCaseSchema);
+    }
+
+    function importCasesFromWorkbook(workbook) {
+      const selectedSheet = chooseBestSheet(workbook);
+
+      if (!selectedSheet || !selectedSheet.rows.length) {
+        throw new Error('Le fichier ne contient aucune ligne exploitable.');
+      }
+
+      const imported = selectedSheet.rows
+        .map(mapRowToCase)
+        .filter(c => c.numeroEtranger || c.nom || c.prenom);
+
+      if (!imported.length) {
+        throw new Error('Aucune ligne exploitable trouvée dans la ou les feuilles sélectionnées.');
+      }
+
+      const replace = confirm(
+        `Import de ${imported.length} dossier(s) depuis "${selectedSheet.name}".\n\nOK = remplacer tous les dossiers existants\nAnnuler = fusionner automatiquement`
+      );
+
+      showLoader(`Import de ${imported.length} dossier(s) vers Grist…`);
+
+      (async () => {
+        try {
+          if (replace) {
+            // Supprimer tous les dossiers existants de l'année courante
+            const toDelete = state.cases.filter(c => c._rowId);
+            for (const c of toDelete) {
+              await gristDeleteCase(c._rowId);
+            }
+            for (const c of imported) {
+              await gristUpsertCase(c);
+            }
+          } else {
+            mergeImportedCases(imported);
+            for (const c of imported) {
+              await gristUpsertCase(c);
+            }
+          }
+
+          const additions = addImportedAgentsAndTitres(imported);
+          for (const a of state.agents) {
+            // Agents déjà existants en Grist ne seront pas dupliqués
+          }
+
+          state.cases = (await gristFetchCases()).map(normalizeCaseSchema);
+          renderAll();
+
+          const parts = [`${imported.length} dossier(s) importé(s)`];
+          if (additions.agentsAdded) parts.push(`${additions.agentsAdded} nouvel/nouveaux agent(s) ajouté(s)`);
+          if (additions.titresAdded) parts.push(`${additions.titresAdded} nouveau(x) type(s) de titre ajouté(s)`);
+          alert(parts.join(' · ') + '.');
+        } catch (err) {
+          alert('Erreur lors de l'import Grist : ' + err.message);
+        } finally {
+          hideLoader();
+        }
+      })();
+    }
+
+    function handleSpreadsheetImport() {
+      const fileInput = document.getElementById('spreadsheetImportInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Sélectionnez un fichier tableur (CSV, XLSX, XLS, ODS...).');
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = event => {
+        try {
+          const data = event.target.result;
+          const workbook = XLSX.read(data, {
+            type: 'array',
+            cellDates: true
+          });
+
+          importCasesFromWorkbook(workbook);
+          fileInput.value = '';
+        } catch (err) {
+          alert('Import impossible : ' + err.message);
+        }
+      };
+
+      reader.onerror = () => {
+        alert('Lecture du fichier impossible.');
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    document.getElementById('caseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = getFormData();
+      showLoader('Enregistrement en cours…');
+      try {
+        // Retrouver le _rowId si c'est une mise à jour
+        const existing = state.cases.find(c => c.id === payload.id);
+        if (existing) payload._rowId = existing._rowId;
+
+        await gristUpsertCase(payload);
+
+        // Rechargement depuis Grist pour avoir les rowIds à jour
+        state.cases = (await gristFetchCases()).map(normalizeCaseSchema);
+        state.selectedCaseId = payload.id;
+
+        renderAll();
+        showView('detail');
+        resetCaseForm();
+      } catch (err) {
+        alert('Erreur lors de l'enregistrement : ' + err.message);
+      } finally {
+        hideLoader();
+      }
+    });
+
+    document.getElementById('searchInput').addEventListener('input', () => {
+      renderTable();
+      renderAgentSummary();
+      renderAlerts();
+      renderStats();
+    });
+
+    document.getElementById('statusFilter').addEventListener('change', () => {
+      renderTable();
+      renderAgentSummary();
+      renderAlerts();
+      renderStats();
+    });
+
+    document.getElementById('titreFilter').addEventListener('change', () => {
+      renderTable();
+      renderAgentSummary();
+      renderAlerts();
+      renderStats();
+    });
+
+    document.getElementById('agentFilter').addEventListener('change', () => {
+      renderTable();
+      renderAgentSummary();
+      renderAlerts();
+      renderStats();
+    });
+
+    document.getElementById('periodFilter').addEventListener('change', () => {
+      renderTable();
+      renderAgentSummary();
+      renderAlerts();
+      renderStats();
+    });
+
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+
+    ['statsPeriodType','statsMonthFilter','statsQuarterFilter','statsSemesterFilter','statsAgentFilter','statsTitreFilter']
+      .forEach(id => {
+        document.getElementById(id).addEventListener('change', renderStatisticsView);
+      });
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => showView(btn.dataset.view));
+    });
+
+    // ── Initialisation Grist ──────────────────────────────────
+    grist.ready({
+      requiredAccess: 'full',
+      columns: COL_CASE_FIELDS
+    });
+
+    (async () => {
+      await loadState();
+      renderAll();
+      resetCaseForm();
+      showView('dashboard');
+
+      // Rechargement automatique si les données Grist changent
+      grist.onRecords(async (records, mappings) => {
+        state.cases = (await gristFetchCases()).map(normalizeCaseSchema);
+        renderAll();
+      });
+    })();
+  </script>
+</body>
+</html>
